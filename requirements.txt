@@ -5,3 +5,4 @@
 Flask
 Flask-WTF
 python-dotenv
+gunicorn
