@@ -1,0 +1,56 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Admin - Official Links{% endblock %}
+
+{% block admin_content %}
+{% from "admin/_macros.html" import text_input, text_area, select_input %}
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card card-portal card-static"><div class="card-body p-4">
+      <h2 class="h6 text-uppercase text-muted mb-3">{{ 'Edit official link' if editing else 'Add official link' }}</h2>
+      <form method="post" action="{{ url_for('admin_resource_save') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if editing %}<input type="hidden" name="id" value="{{ editing.id }}">{% endif %}
+        <div class="row g-3">
+          {{ text_input(form, {}, 'title', 'Title', required=True, maxlength=150, col='col-12') }}
+          {{ text_input(form, {}, 'url', 'Link', type='url', required=True, maxlength=500, col='col-12', placeholder='https://...', help='Opening a changed link and re-verifying it is your job. A changed link resets to "not verified".') }}
+          {{ select_input(form, {}, 'resource_kind', 'Kind', RESOURCE_KINDS, col='col-md-6', required=True) }}
+          {{ select_input(form, {}, 'exam_id', 'Exam (optional)', exam_choices, col='col-md-6', blank='General') }}
+          {{ text_area(form, {}, 'description', 'Description', rows=2, maxlength=500) }}
+          {{ text_input(form, {}, 'last_verified', 'Last verified date', type='date', col='col-12', help='Leave empty if you have not checked the link yourself.') }}
+        </div>
+        <div class="d-flex gap-2 mt-3"><button type="submit" class="btn btn-primary">Save</button>
+          {% if editing %}<a class="btn btn-outline-secondary" href="{{ url_for('admin_resources') }}">Cancel</a>{% endif %}</div>
+      </form>
+    </div></div>
+  </div>
+
+  <div class="col-lg-8">
+    <p class="small text-muted">Pages across the portal read these links from the database, so editing a link here updates the whole site without any code change.</p>
+    {% for r in resources %}
+    <div class="card card-portal card-static resource-item mb-2"><div class="card-body py-3">
+      <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+        <div>
+          <strong>{{ r.title }}</strong>
+          <span class="badge text-bg-light border">{{ r.resource_kind }}</span>
+          {% if r.short_code %}<span class="badge text-bg-primary">{{ r.short_code }}</span>{% endif %}
+          <div class="small text-break"><a href="{{ r.url }}" target="_blank" rel="noopener noreferrer">{{ r.url }} <i class="bi bi-box-arrow-up-right"></i></a></div>
+          <div class="small {{ 'text-success' if r.last_verified else 'text-danger' }}">
+            {% if r.last_verified %}Verified {{ r.last_verified|format_date }}{% else %}Not yet verified{% endif %}</div>
+        </div>
+        <div class="text-nowrap">
+          <form method="post" action="{{ url_for('admin_resource_verify', resource_id=r.id) }}" class="d-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-sm btn-outline-success" title="Use after opening the link yourself"><i class="bi bi-patch-check"></i> Mark verified today</button>
+          </form>
+          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_resources', edit=r.id) }}"><i class="bi bi-pencil"></i></a>
+          <form method="post" action="{{ url_for('admin_resource_delete', resource_id=r.id) }}" class="d-inline" data-confirm="Delete the link '{{ r.title }}'?">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+          </form>
+        </div>
+      </div>
+    </div></div>
+    {% else %}<div class="alert alert-info">No official links yet.</div>{% endfor %}
+  </div>
+</div>
+{% endblock %}

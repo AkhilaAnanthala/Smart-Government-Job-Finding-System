@@ -1,0 +1,53 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Admin - Jobs{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h2 class="h5 text-brand mb-0">Job records ({{ total }})</h2>
+  <a class="btn btn-primary btn-sm" href="{{ url_for('admin_job_new') }}"><i class="bi bi-plus-lg"></i> Add job</a>
+</div>
+<form method="get" action="{{ url_for('admin_jobs') }}" class="card card-portal card-static filter-card mb-3">
+  <div class="card-body"><div class="row g-3">
+    <div class="col-md-5"><label for="q" class="form-label small fw-semibold">Title or organization</label>
+      <input type="text" class="form-control" id="q" name="q" value="{{ filters.q }}" maxlength="100"></div>
+    <div class="col-6 col-md-2"><label for="govt" class="form-label small fw-semibold">Government</label>
+      <select class="form-select" id="govt" name="govt"><option value="">All</option>
+        {% for g in GOVT_CATEGORIES %}<option value="{{ g }}" {{ 'selected' if filters.govt == g }}>{{ g }}</option>{% endfor %}</select></div>
+    <div class="col-6 col-md-2"><label for="category" class="form-label small fw-semibold">Category</label>
+      <select class="form-select" id="category" name="category"><option value="">All</option>
+        {% for c in EXAM_CATEGORIES %}<option value="{{ c }}" {{ 'selected' if filters.category == c }}>{{ c }}</option>{% endfor %}</select></div>
+    <div class="col-md-3 d-flex align-items-end gap-2">
+      <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Search</button>
+      <a class="btn btn-outline-secondary" href="{{ url_for('admin_jobs') }}">Clear</a></div>
+  </div></div>
+</form>
+
+<div class="card card-portal card-static"><div class="table-responsive">
+  <table class="table table-portal align-middle mb-0">
+    <thead><tr><th>Job</th><th>Type</th><th>Deadline</th><th>Flags</th><th></th></tr></thead>
+    <tbody>
+    {% for job in jobs %}
+    {% set d = deadline_info(job.application_deadline) %}
+    <tr>
+      <td><strong>{{ job.title }}</strong><br><span class="small text-muted">{{ job.organization }}</span></td>
+      <td><span class="badge {{ 'text-bg-primary' if job.govt_category == 'Central' else 'text-bg-info' }}">{{ job.govt_category }}</span>
+        <span class="badge text-bg-light border">{{ job.exam_category }}</span></td>
+      <td>{{ job.application_deadline|format_date }}<br><span class="badge text-bg-{{ d.css_class }}">{{ d.label }}</span></td>
+      <td>{% if job.is_demo %}<span class="badge badge-demo">Demo data</span>{% else %}<span class="badge text-bg-success">Verified record</span>{% endif %}</td>
+      <td class="text-end text-nowrap">
+        <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('job_details', job_id=job.id) }}" title="View public page"><i class="bi bi-eye"></i></a>
+        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_job_edit', job_id=job.id) }}"><i class="bi bi-pencil"></i> Edit</a>
+        <form method="post" action="{{ url_for('admin_job_delete', job_id=job.id) }}" class="d-inline"
+              data-confirm="Delete the job '{{ job.title }}'? Saved bookmarks of this job will also be removed.">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+        </form>
+      </td>
+    </tr>
+    {% else %}<tr><td colspan="5" class="text-muted">No jobs found.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div></div>
+{% set pager_endpoint = 'admin_jobs' %}
+{% include "_pager.html" %}
+{% endblock %}

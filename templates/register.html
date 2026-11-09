@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="container">
+    <div class="card card-portal card-static auth-card-wide">
+      <div class="card-body p-4 p-md-5">
+        <h1 class="h3 text-brand mb-1"><i class="bi bi-person-plus"></i> Create your account</h1>
+        <p class="text-muted">Your qualification and date of birth are used to check job eligibility.</p>
+
+        <form method="post" action="{{ url_for('register') }}" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <h2 class="h6 text-uppercase text-muted mt-4">Personal and education details</h2>
+          {% include "_profile_fields.html" %}
+
+          <h2 class="h6 text-uppercase text-muted mt-4">Account details</h2>
+          <div class="row g-3">
+            <div class="col-12">
+              <label for="email" class="form-label fw-semibold">Email</label>
+              <input type="email" class="form-control {{ 'is-invalid' if errors.get('email') }}" id="email"
+                     name="email" value="{{ form.get('email', '') }}" maxlength="254" autocomplete="email" required>
+              {% if errors.get('email') %}<div class="invalid-feedback">{{ errors['email'] }}</div>{% endif %}
+            </div>
+
+            <div class="col-md-6">
+              <label for="password" class="form-label fw-semibold">Password</label>
+              <div class="input-group">
+                <input type="password" class="form-control {{ 'is-invalid' if errors.get('password') }}" id="password"
+                       name="password" minlength="8" maxlength="128" autocomplete="new-password" required>
+                <button class="btn btn-outline-secondary" type="button" data-toggle-password="#password" aria-label="Show or hide password">
+                  <i class="bi bi-eye"></i></button>
+              </div>
+              {% if errors.get('password') %}<div class="invalid-feedback d-block">{{ errors['password'] }}</div>{% endif %}
+              <div class="form-text">At least 8 characters, with letters and numbers.</div>
+            </div>
+
+            <div class="col-md-6">
+              <label for="confirm_password" class="form-label fw-semibold">Confirm password</label>
+              <input type="password" class="form-control {{ 'is-invalid' if errors.get('confirm_password') }}"
+                     id="confirm_password" name="confirm_password" maxlength="128" autocomplete="new-password" required>
+              {% if errors.get('confirm_password') %}<div class="invalid-feedback">{{ errors['confirm_password'] }}</div>{% endif %}
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg w-100 mt-4">Register</button>
+          <p class="text-center mt-3 mb-0">Already have an account? <a href="{{ url_for('login') }}">Log in</a></p>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Study Materials{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1><i class="bi bi-book"></i> Study Materials</h1>
+    <p class="text-muted small mb-0">Official links and notes, organised by exam and subject.</p>
+  </div>
+</div>
+
+<div class="container">
+  <form method="get" action="{{ url_for('materials') }}" class="card card-portal card-static filter-card mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-lg-4">
+          <label for="q" class="form-label small fw-semibold">Search title or description</label>
+          <input type="text" class="form-control" id="q" name="q" value="{{ filters.q }}" maxlength="100">
+        </div>
+        <div class="col-6 col-lg-4">
+          <label for="exam" class="form-label small fw-semibold">Examination</label>
+          <select class="form-select" id="exam" name="exam">
+            <option value="">All exams</option>
+            {% for e in exams_list %}<option value="{{ e.id }}" {{ 'selected' if filters.exam == e.id }}>{{ e.short_code }} - {{ e.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-6 col-lg-4">
+          <label for="subject" class="form-label small fw-semibold">Subject</label>
+          <select class="form-select" id="subject" name="subject">
+            <option value="">All subjects</option>
+            {% for e in exams_list %}
+            <optgroup label="{{ e.short_code }}">
+              {% for s in subjects_list if s.exam_id == e.id %}
+              <option value="{{ s.id }}" {{ 'selected' if filters.subject == s.id }}>{{ s.name }}</option>
+              {% endfor %}
+            </optgroup>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-6 col-lg-3">
+          <label for="type" class="form-label small fw-semibold">Resource type</label>
+          <select class="form-select" id="type" name="type">
+            <option value="">All types</option>
+            {% for t in RESOURCE_TYPES %}<option value="{{ t }}" {{ 'selected' if filters.type == t }}>{{ t }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-6 col-lg-3">
+          <label for="source" class="form-label small fw-semibold">Source</label>
+          <select class="form-select" id="source" name="source">
+            {% for value, label in source_options.items() %}<option value="{{ value }}" {{ 'selected' if filters.source == value }}>{{ label }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-lg-6 d-flex align-items-end gap-2">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Search</button>
+          <a class="btn btn-outline-secondary" href="{{ url_for('materials') }}">Clear filters</a>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <h2 class="h5 mb-3">{{ total }} resource{{ '' if total == 1 else 's' }} found</h2>
+  <div class="row g-3">
+    {% for m in materials %}
+    <div class="col-md-6 col-lg-4">{% include "_material_card.html" %}</div>
+    {% else %}
+    <div class="col-12"><div class="alert alert-info">No study materials match your filters. <a href="{{ url_for('materials') }}">Clear filters</a>.</div></div>
+    {% endfor %}
+  </div>
+
+  {% set pager_endpoint = 'materials' %}
+  {% include "_pager.html" %}
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Admin - Subjects{% endblock %}
+
+{% block admin_content %}
+{% from "admin/_macros.html" import text_input, text_area, select_input %}
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card card-portal card-static"><div class="card-body p-4">
+      <h2 class="h6 text-uppercase text-muted mb-3">{{ 'Edit subject' if editing else 'Add subject' }}</h2>
+      <form method="post" action="{{ url_for('admin_subject_save') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if editing %}<input type="hidden" name="id" value="{{ editing.id }}">{% endif %}
+        <div class="row g-3">
+          {% if editing %}
+          <div class="col-12"><label class="form-label fw-semibold">Exam</label>
+            <input type="text" class="form-control" value="{{ editing.short_code }}" disabled>
+            <div class="form-text">The exam of an existing subject cannot be changed.</div></div>
+          {% else %}
+          {{ select_input(form, {}, 'exam_id', 'Exam', exam_choices, col='col-12', required=True, blank='-- Select exam --') }}
+          {% endif %}
+          {{ text_input(form, {}, 'name', 'Subject name', required=True, maxlength=150, col='col-12') }}
+          {{ text_area(form, {}, 'description', 'Description', rows=2, maxlength=500) }}
+        </div>
+        <div class="d-flex gap-2 mt-3">
+          <button type="submit" class="btn btn-primary">Save</button>
+          {% if editing %}<a class="btn btn-outline-secondary" href="{{ url_for('admin_subjects', exam=exam_id) }}">Cancel</a>{% endif %}
+        </div>
+      </form>
+    </div></div>
+  </div>
+
+  <div class="col-lg-8">
+    <form method="get" action="{{ url_for('admin_subjects') }}" class="d-flex flex-wrap gap-2 align-items-end mb-3">
+      <div class="flex-grow-1"><label for="exam" class="form-label small fw-semibold mb-1">Show subjects of</label>
+        <select class="form-select" id="exam" name="exam"><option value="">All exams</option>
+          {% for value, label in exam_choices %}<option value="{{ value }}" {{ 'selected' if exam_id == value }}>{{ label }}</option>{% endfor %}</select></div>
+      <button type="submit" class="btn btn-primary">Filter</button>
+    </form>
+    <div class="card card-portal card-static"><div class="table-responsive">
+      <table class="table table-portal align-middle mb-0">
+        <thead><tr><th>Subject</th><th>Exam</th><th>Resources</th><th>Questions</th><th>Tests</th><th></th></tr></thead>
+        <tbody>
+        {% for s in subjects %}
+        <tr>
+          <td><strong>{{ s.name }}</strong><br><span class="small text-muted">{{ s.description }}</span></td>
+          <td><span class="badge text-bg-primary">{{ s.short_code }}</span></td>
+          <td>{{ s.material_count }}</td><td>{{ s.question_count }}</td><td>{{ s.test_count }}</td>
+          <td class="text-end text-nowrap">
+            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_subjects', edit=s.id, exam=exam_id) }}"><i class="bi bi-pencil"></i></a>
+            <form method="post" action="{{ url_for('admin_subject_delete', subject_id=s.id) }}" class="d-inline"
+                  data-confirm="Delete the subject '{{ s.name }}'? This also deletes its {{ s.material_count }} resource(s), {{ s.question_count }} question(s) and {{ s.test_count }} mock test(s) with their attempts.">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}<tr><td colspan="6" class="text-muted">No subjects yet.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div></div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Preparation Hub{% endblock %}
+
+{% block content %}
+{% set blurbs = {
+  'UPSC': 'Civil services and other Union Public Service Commission recruitments.',
+  'SSC': 'Staff Selection Commission exams for central government offices.',
+  'Railway': 'Railway Recruitment Board exams for Indian Railways posts.',
+  'APPSC': 'Andhra Pradesh Public Service Commission state recruitments.',
+  'Other': 'Other recruitment exams, such as teacher recruitment.'
+} %}
+<div class="page-header">
+  <div class="container">
+    <h1><i class="bi bi-journal-bookmark"></i> Preparation Hub</h1>
+    <p class="text-muted small mb-0">Syllabus, study materials, previous papers and practice questions, organised by examination.</p>
+  </div>
+</div>
+
+<div class="container">
+  <!-- How the content is organised -->
+  <div class="card card-portal card-static mb-4">
+    <div class="card-body p-4">
+      <h2 class="h5 text-brand mb-3">How preparation content is organised</h2>
+      <div class="prep-chain d-flex flex-wrap align-items-center gap-2 mb-3">
+        <span class="chain-step">Government Job</span><i class="bi bi-arrow-right"></i>
+        <span class="chain-step">Recruitment Exam</span><i class="bi bi-arrow-right"></i>
+        <span class="chain-step">Subject</span><i class="bi bi-arrow-right"></i>
+        <span class="chain-step">Study Material / Previous Papers / Practice Questions</span>
+      </div>
+      <p class="small text-muted mb-0">Many jobs can use the same recruitment exam, so resources are attached to the exam and its
+        subjects once and shared by every job. Resources marked <span class="badge text-bg-success">Official</span> come from
+        government websites. Everything else is an <span class="badge text-bg-secondary">Additional resource</span>.</p>
+    </div>
+  </div>
+
+  <!-- Shortcuts -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-4 col-lg-2"><a class="feature-tile card card-portal p-3" href="{{ url_for('exams') }}">
+      <div class="stat-icon"><i class="bi bi-journal-text"></i></div>
+      <h3 class="h6 job-title mb-0">Examinations</h3><span class="small text-muted">{{ stats.exams }} exams</span></a></div>
+    <div class="col-6 col-md-4 col-lg-2"><a class="feature-tile card card-portal p-3" href="{{ url_for('materials') }}">
+      <div class="stat-icon"><i class="bi bi-book"></i></div>
+      <h3 class="h6 job-title mb-0">Study Materials</h3><span class="small text-muted">{{ stats.materials }} resources</span></a></div>
+    <div class="col-6 col-md-4 col-lg-2"><a class="feature-tile card card-portal p-3" href="{{ url_for('previous_papers') }}">
+      <div class="stat-icon"><i class="bi bi-file-earmark-text"></i></div>
+      <h3 class="h6 job-title mb-0">Previous Papers</h3><span class="small text-muted">{{ stats.papers }} links</span></a></div>
+    <div class="col-6 col-md-4 col-lg-2"><a class="feature-tile card card-portal p-3" href="{{ url_for('practice_questions') }}">
+      <div class="stat-icon"><i class="bi bi-patch-question"></i></div>
+      <h3 class="h6 job-title mb-0">Practice Questions</h3><span class="small text-muted">{{ stats.questions }} questions</span></a></div>
+    <div class="col-6 col-md-4 col-lg-2"><a class="feature-tile card card-portal p-3" href="{{ safe_url('mock_tests', '#') }}">
+      <div class="stat-icon"><i class="bi bi-stopwatch"></i></div>
+      <h3 class="h6 job-title mb-0">Mock Tests</h3><span class="small text-muted">Timed practice</span></a></div>
+    <div class="col-6 col-md-4 col-lg-2"><a class="feature-tile card card-portal p-3" href="{{ url_for('jobs') }}">
+      <div class="stat-icon"><i class="bi bi-briefcase"></i></div>
+      <h3 class="h6 job-title mb-0">Government Jobs</h3><span class="small text-muted">Find a job first</span></a></div>
+  </div>
+
+  <!-- Exam categories -->
+  <h2 class="section-title">Examination Categories</h2>
+  <p class="section-sub">Choose an exam to see its subjects, syllabus, materials, papers and the jobs that use it.</p>
+  {% for category in EXAM_CATEGORIES %}
+  {% set category_exams = grouped.get(category, []) %}
+  {% if category_exams %}
+  <div class="card card-portal card-static mb-3">
+    <div class="card-body p-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
+        <h3 class="h5 text-brand mb-0">{{ category }}</h3>
+        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('exams', category=category) }}">View all {{ category }} exams</a>
+      </div>
+      <p class="small text-muted">{{ blurbs.get(category, '') }}</p>
+      <div class="row g-3">
+        {% for exam in category_exams %}
+        <div class="col-md-6 col-lg-4">
+          <div class="border rounded p-3 h-100 d-flex flex-column">
+            <strong>{{ exam.name }}</strong>
+            <span class="small text-muted mb-2">{{ exam.short_code }} &middot; {{ exam.job_count }} job{{ '' if exam.job_count == 1 else 's' }}</span>
+            <div class="mt-auto d-flex gap-2">
+              <a class="btn btn-sm btn-primary" href="{{ url_for('exam_details', exam_id=exam.id) }}">Details</a>
+              <a class="btn btn-sm btn-outline-primary" href="{{ url_for('syllabus', exam_id=exam.id) }}">Syllabus</a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  {% endfor %}
+
+  <!-- Official resources -->
+  <h2 class="section-title mt-4">Official Resource Links</h2>
+  <p class="section-sub">These open the official websites. Administrators can update the links without changing any code.</p>
+  <div class="row g-3">
+    {% for r in resources %}
+    <div class="col-md-6">{% include "_official_resource.html" %}</div>
+    {% else %}
+    <div class="col-12"><div class="alert alert-info mb-0">No official resource links have been added yet.</div></div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

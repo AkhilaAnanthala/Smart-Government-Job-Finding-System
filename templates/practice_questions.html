@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Practice Questions{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div>
+      <h1><i class="bi bi-patch-question"></i> Practice Questions</h1>
+      <p class="text-muted small mb-0">Study at your own pace. Click a question's toggle to see the answer.</p>
+    </div>
+    <a class="btn btn-primary btn-sm" href="{{ safe_url('mock_tests', '#') }}"><i class="bi bi-stopwatch"></i> Take a timed mock test</a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="alert alert-warning small">
+    <i class="bi bi-exclamation-triangle"></i>
+    These are original practice questions created for demonstration purposes. They are not official previous-year questions.
+  </div>
+
+  <form method="get" action="{{ url_for('practice_questions') }}" class="card card-portal card-static filter-card mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-lg-4">
+          <label for="exam" class="form-label small fw-semibold">Examination</label>
+          <select class="form-select" id="exam" name="exam">
+            <option value="">All exams</option>
+            {% for e in exams_list %}<option value="{{ e.id }}" {{ 'selected' if filters.exam == e.id }}>{{ e.short_code }} - {{ e.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-6 col-lg-3">
+          <label for="subject" class="form-label small fw-semibold">Subject</label>
+          <select class="form-select" id="subject" name="subject">
+            <option value="">All subjects</option>
+            {% for e in exams_list %}
+            <optgroup label="{{ e.short_code }}">
+              {% for s in subjects_list if s.exam_id == e.id %}
+              <option value="{{ s.id }}" {{ 'selected' if filters.subject == s.id }}>{{ s.name }}</option>
+              {% endfor %}
+            </optgroup>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-6 col-lg-2">
+          <label for="difficulty" class="form-label small fw-semibold">Difficulty</label>
+          <select class="form-select" id="difficulty" name="difficulty">
+            <option value="">Any</option>
+            {% for d in DIFFICULTY_LEVELS %}<option value="{{ d }}" {{ 'selected' if filters.difficulty == d }}>{{ d }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-lg-3 d-flex align-items-end gap-2">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Filter</button>
+          <a class="btn btn-outline-secondary" href="{{ url_for('practice_questions') }}">Clear</a>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <h2 class="h5 mb-3">{{ total }} question{{ '' if total == 1 else 's' }} found</h2>
+
+  {% for q in questions %}
+  {% set opts = {'A': q.option_a, 'B': q.option_b, 'C': q.option_c, 'D': q.option_d} %}
+  <div class="card card-portal card-static mb-3">
+    <div class="card-body">
+      <div class="mb-2 d-flex flex-wrap gap-1">
+        <span class="badge text-bg-primary">{{ q.short_code }}</span>
+        <span class="badge text-bg-light border">{{ q.subject_name }}</span>
+        <span class="badge text-bg-{{ 'success' if q.difficulty == 'Easy' else ('warning' if q.difficulty == 'Medium' else 'danger') }}">{{ q.difficulty }}</span>
+        {% if q.is_demo %}<span class="badge badge-demo">Practice question (demo)</span>{% endif %}
+      </div>
+      <p class="fw-semibold mb-2">{{ offset + loop.index }}. {{ q.question_text }}</p>
+      <ul class="list-unstyled mb-3">
+        {% for letter, text in opts.items() %}
+        <li class="mb-1"><span class="badge text-bg-light border me-1">{{ letter }}</span> {{ text }}</li>
+        {% endfor %}
+      </ul>
+      <details class="answer-box">
+        <summary>Show answer and explanation</summary>
+        <p class="mb-1 mt-2"><strong>Correct answer: {{ q.correct_option }}</strong> &mdash; {{ opts[q.correct_option] }}</p>
+        <p class="small text-muted mb-0">{{ q.explanation or 'No explanation available.' }}</p>
+      </details>
+    </div>
+  </div>
+  {% else %}
+  <div class="alert alert-info">No questions match your filters. <a href="{{ url_for('practice_questions') }}">Clear filters</a>.</div>
+  {% endfor %}
+
+  {% set pager_endpoint = 'practice_questions' %}
+  {% include "_pager.html" %}
+</div>
+{% endblock %}

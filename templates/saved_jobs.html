@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Saved Jobs{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container"><h1><i class="bi bi-bookmark-star"></i> Saved Jobs</h1></div>
+</div>
+
+<div class="container">
+  <div class="row g-3">
+    {% for job in jobs %}
+    <div class="col-md-6 col-lg-4">{% include "_job_card.html" %}</div>
+    {% else %}
+    <div class="col-12">
+      <div class="alert alert-info">You have not saved any jobs yet.
+        <a href="{{ url_for('jobs') }}">Browse jobs</a> and click the bookmark button to save them here.</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

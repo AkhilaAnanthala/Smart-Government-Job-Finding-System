@@ -1,0 +1,42 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Admin - Results{% endblock %}
+
+{% block admin_content %}
+<h2 class="h5 text-brand mb-3">Mock test results (all users)</h2>
+<div class="row g-3 mb-3">
+  <div class="col-4"><div class="stat-card"><div class="stat-icon"><i class="bi bi-journal-check"></i></div><div><div class="stat-number">{{ summary.n }}</div><div class="stat-label">Attempts</div></div></div></div>
+  <div class="col-4"><div class="stat-card"><div class="stat-icon"><i class="bi bi-graph-up"></i></div><div><div class="stat-number">{{ ('%g'|format(summary.avg) ~ '%') if summary.n else '-' }}</div><div class="stat-label">Average score</div></div></div></div>
+  <div class="col-4"><div class="stat-card"><div class="stat-icon"><i class="bi bi-trophy"></i></div><div><div class="stat-number">{{ ('%g'|format(summary.best) ~ '%') if summary.n else '-' }}</div><div class="stat-label">Best score</div></div></div></div>
+</div>
+<form method="get" action="{{ url_for('admin_results') }}" class="card card-portal card-static filter-card mb-3">
+  <div class="card-body"><div class="row g-3">
+    <div class="col-md-5"><label for="q" class="form-label small fw-semibold">Student name or email</label>
+      <input type="text" class="form-control" id="q" name="q" value="{{ filters.q }}" maxlength="100"></div>
+    <div class="col-md-4"><label for="exam" class="form-label small fw-semibold">Exam</label>
+      <select class="form-select" id="exam" name="exam"><option value="">All</option>
+        {% for value, label in exam_choices %}<option value="{{ value }}" {{ 'selected' if filters.exam == value }}>{{ label }}</option>{% endfor %}</select></div>
+    <div class="col-md-3 d-flex align-items-end gap-2"><button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Filter</button>
+      <a class="btn btn-outline-secondary" href="{{ url_for('admin_results') }}">Clear</a></div>
+  </div></div>
+</form>
+
+<div class="card card-portal card-static"><div class="table-responsive">
+  <table class="table table-portal align-middle mb-0">
+    <thead><tr><th>Student</th><th>Test</th><th>Score</th><th>Correct</th><th>Time</th><th>Submitted</th></tr></thead>
+    <tbody>
+    {% for a in attempts %}
+    <tr>
+      <td><strong>{{ a.full_name }}</strong><br><span class="small text-muted">{{ a.email }}</span></td>
+      <td>{{ a.test_title }}<br><span class="small text-muted">{{ a.subject_name }}</span></td>
+      <td><span class="badge text-bg-primary fs-6">{{ '%g'|format(a.score_percent) }}%</span></td>
+      <td>{{ a.correct_count }} / {{ a.total_questions }}</td>
+      <td>{{ a.time_taken_seconds|duration }}</td>
+      <td>{{ a.submitted_at[:10]|format_date }}</td>
+    </tr>
+    {% else %}<tr><td colspan="6" class="text-muted">No submitted attempts found.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div></div>
+{% set pager_endpoint = 'admin_results' %}
+{% include "_pager.html" %}
+{% endblock %}

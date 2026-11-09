@@ -1,0 +1,15 @@
+{# Needs: result  (from eligibility.check_job_eligibility) #}
+{% set icons = {
+  'ok': 'bi-check-circle-fill text-success',
+  'fail': 'bi-x-circle-fill text-danger',
+  'warn': 'bi-exclamation-triangle-fill text-warning',
+  'info': 'bi-info-circle-fill text-secondary'
+} %}
+<ul class="list-unstyled small mb-0">
+  {% for reason in result.reasons %}
+  <li class="d-flex gap-2 mb-2">
+    <i class="bi {{ icons[reason.kind] }} mt-1"></i>
+    <span>{{ reason.text }}</span>
+  </li>
+  {% endfor %}
+</ul>

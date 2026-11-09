@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Results - {{ test.title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb small mb-2">
+        <li class="breadcrumb-item"><a href="{{ url_for('mock_tests') }}">Mock tests</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Results</li>
+      </ol>
+    </nav>
+    <h1><i class="bi bi-clipboard-data"></i> Test results</h1>
+    <p class="text-muted mb-0">{{ test.title }}</p>
+  </div>
+</div>
+
+<div class="container">
+  <div class="card card-portal card-static mb-4">
+    <div class="card-body p-4">
+      <div class="row align-items-center g-4">
+        <div class="col-md-3 text-center">
+          <div class="score-circle score-{{ feedback_class }}">{{ '%g'|format(attempt.score_percent) }}%</div>
+        </div>
+        <div class="col-md-5">
+          <h2 class="h5 mb-1">{{ attempt.correct_count }} out of {{ total }} correct</h2>
+          <p class="text-{{ feedback_class }} fw-semibold">{{ feedback }}</p>
+          <p class="small text-muted mb-0">Time taken: {{ attempt.time_taken_seconds|duration }} of {{ test.duration_minutes }} minutes<br>
+            Submitted: {{ attempt.submitted_at[:10]|format_date }}</p>
+        </div>
+        <div class="col-md-4">
+          <ul class="list-unstyled mb-0">
+            <li class="mb-1"><span class="badge text-bg-success">Correct</span> {{ correct }}</li>
+            <li class="mb-1"><span class="badge text-bg-danger">Incorrect</span> {{ incorrect }}</li>
+            <li><span class="badge text-bg-secondary">Unanswered</span> {{ unanswered }}</li>
+          </ul>
+        </div>
+      </div>
+      <hr>
+      <div class="d-flex flex-wrap gap-2">
+        <form method="post" action="{{ url_for('start_test', test_id=test.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-arrow-repeat"></i> Take this test again</button>
+        </form>
+        <a class="btn btn-outline-primary" href="{{ url_for('mock_tests') }}">All mock tests</a>
+        <a class="btn btn-outline-primary" href="{{ url_for('attempt_history') }}">Attempt history</a>
+        <a class="btn btn-outline-primary" href="{{ url_for('dashboard') }}">Dashboard</a>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="h5 text-brand mb-3">Answer review</h2>
+  {% for r in rows %}
+  {% set opts = {'A': r.option_a, 'B': r.option_b, 'C': r.option_c, 'D': r.option_d} %}
+  {% set state = 'skipped' if r.selected_option is none else ('correct' if r.is_correct else 'wrong') %}
+  <div class="card card-portal card-static mb-3 result-{{ state }}">
+    <div class="card-body">
+      <div class="mb-2 d-flex flex-wrap gap-1">
+        <span class="badge text-bg-light border">Question {{ r.question_order }}</span>
+        {% if state == 'correct' %}<span class="badge text-bg-success">Correct</span>
+        {% elif state == 'wrong' %}<span class="badge text-bg-danger">Incorrect</span>
+        {% else %}<span class="badge text-bg-secondary">Unanswered</span>{% endif %}
+        {% if r.is_demo %}<span class="badge badge-demo">Practice question (demo)</span>{% endif %}
+      </div>
+      <p class="fw-semibold mb-2">{{ r.question_text }}</p>
+      <ul class="list-unstyled mb-3">
+        {% for letter, text in opts.items() %}
+        <li class="review-option {{ 'opt-correct' if letter == r.correct_option else ('opt-wrong' if letter == r.selected_option else '') }}">
+          <span class="badge text-bg-light border me-1">{{ letter }}</span> {{ text }}
+          {% if letter == r.correct_option %}<span class="small fw-semibold text-success ms-1"><i class="bi bi-check-circle-fill"></i> Correct answer</span>{% endif %}
+          {% if letter == r.selected_option %}<span class="small fw-semibold ms-1">(Your answer)</span>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      <div class="answer-box small"><strong>Explanation:</strong> {{ r.explanation or 'No explanation available.' }}</div>
+    </div>
+  </div>
+  {% else %}
+  <div class="alert alert-info">No questions are stored for this attempt.</div>
+  {% endfor %}
+</div>
+{% endblock %}

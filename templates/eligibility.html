@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Eligibility Checker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1><i class="bi bi-check2-square"></i> Smart Eligibility Checker</h1>
+    <p class="text-muted small mb-0">Compare your profile with the stored rules of every job.</p>
+  </div>
+</div>
+
+<div class="container">
+  <div class="alert alert-warning small">
+    <i class="bi bi-exclamation-triangle"></i>
+        <strong>Important:</strong> this is a rule-based guide that uses sample data. Age relaxation for reserved
+    categories is <strong>not</strong> applied.
+    The final eligibility decision must be verified using the official recruitment notification.
+  </div>
+
+  <!-- ============ FORM ============ -->
+  <form method="get" action="{{ url_for('eligibility') }}" class="card card-portal card-static mb-4">
+    <div class="card-body p-4">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label for="age" class="form-label fw-semibold">Age (years)</label>
+          <input type="number" class="form-control {{ 'is-invalid' if errors.get('age') }}" id="age" name="age"
+                 min="14" max="70" value="{{ form.age }}" required>
+          {% if errors.get('age') %}<div class="invalid-feedback">{{ errors['age'] }}</div>{% endif %}
+        </div>
+        <div class="col-md-5">
+          <label for="qualification" class="form-label fw-semibold">Highest qualification</label>
+          <select class="form-select {{ 'is-invalid' if errors.get('qualification') }}" id="qualification" name="qualification" required>
+            <option value="">-- Select --</option>
+            {% for level, label in QUALIFICATION_LEVELS.items() %}
+            <option value="{{ level }}" {{ 'selected' if form.qualification == level|string }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          {% if errors.get('qualification') %}<div class="invalid-feedback">{{ errors['qualification'] }}</div>{% endif %}
+        </div>
+        <div class="col-md-4">
+          <label for="state" class="form-label fw-semibold">State</label>
+          <select class="form-select {{ 'is-invalid' if errors.get('state') }}" id="state" name="state" required>
+            <option value="">-- Select --</option>
+            {% for s in INDIAN_STATES %}<option value="{{ s }}" {{ 'selected' if form.state == s }}>{{ s }}</option>{% endfor %}
+          </select>
+          {% if errors.get('state') %}<div class="invalid-feedback">{{ errors['state'] }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-4">
+          <label for="govt" class="form-label fw-semibold">Government</label>
+          <select class="form-select" id="govt" name="govt">
+            <option value="">Central and Andhra Pradesh</option>
+            {% for g in GOVT_CATEGORIES %}<option value="{{ g }}" {{ 'selected' if form.govt == g }}>{{ g }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label for="show" class="form-label fw-semibold">Show</label>
+          <select class="form-select" id="show" name="show">
+            {% for value, label in show_options.items() %}
+            <option value="{{ value }}" {{ 'selected' if form.show == value }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="include_closed" name="include_closed" value="1"
+                   {{ 'checked' if form.include_closed }}>
+            <label class="form-check-label" for="include_closed">Include jobs with closed deadlines</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex flex-wrap gap-2 mt-4">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Check eligibility</button>
+        {% if current_user %}
+        <a class="btn btn-outline-primary" href="{{ url_for('eligibility', use_profile=1) }}">
+          <i class="bi bi-person-check"></i> Use my profile</a>
+        {% else %}
+        <a class="btn btn-outline-secondary" href="{{ url_for('login', next=url_for('eligibility')) }}">Log in to use your profile</a>
+        {% endif %}
+      </div>
+    </div>
+  </form>
+
+  <!-- ============ RESULTS ============ -->
+  {% if ran and not errors %}
+  <h2 class="h4 text-brand mb-3">Eligibility results
+    {% if used_profile %}<span class="badge text-bg-light border fs-6 fw-normal">using your profile</span>{% endif %}</h2>
+
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon text-success"><i class="bi bi-check-circle"></i></div>
+      <div><div class="stat-number">{{ counts.eligible }}</div><div class="stat-label">Eligible</div></div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon text-warning"><i class="bi bi-exclamation-triangle"></i></div>
+      <div><div class="stat-number">{{ counts.verify }}</div><div class="stat-label">Needs verification</div></div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon text-danger"><i class="bi bi-x-circle"></i></div>
+      <div><div class="stat-number">{{ counts.not_eligible }}</div><div class="stat-label">Not eligible</div></div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon"><i class="bi bi-briefcase"></i></div>
+      <div><div class="stat-number">{{ counts.total }}</div><div class="stat-label">Jobs checked</div></div></div></div>
+  </div>
+
+  {% for item in items %}
+  {% set job = item.job %}{% set result = item.result %}
+  {% set d = deadline_info(job.application_deadline) %}
+  <div class="card card-portal card-static elig-card elig-{{ result.status }} mb-3">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-lg-4">
+          <div class="mb-2 d-flex flex-wrap gap-1">
+            <span class="badge {{ 'text-bg-primary' if job.govt_category == 'Central' else 'text-bg-info' }}">{{ job.govt_category }}</span>
+            <span class="badge text-bg-light border">{{ job.exam_category }}</span>
+            {% if job.is_demo %}<span class="badge badge-demo">Demo data</span>{% endif %}
+          </div>
+          <h3 class="h6 job-title mb-1">{{ job.title }}</h3>
+          <p class="small text-muted mb-2">{{ job.organization }}</p>
+          <p class="mb-2"><span class="badge text-bg-{{ result.css_class }}"><i class="bi {{ result.icon }}"></i> {{ result.label }}</span>
+            <span class="badge text-bg-{{ d.css_class }}">{{ d.label }}</span></p>
+          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('job_details', job_id=job.id) }}">View details</a>
+        </div>
+        <div class="col-lg-8">
+          {% include "_eligibility_result.html" %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="alert alert-info">No jobs match this view. Try "All results" or tick "Include jobs with closed deadlines".</div>
+  {% endfor %}
+
+  <p class="small text-muted">The final eligibility decision must be verified using the official recruitment notification.</p>
+  {% endif %}
+</div>
+{% endblock %}

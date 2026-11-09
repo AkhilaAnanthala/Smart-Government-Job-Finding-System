@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}{{ job.title }}{% endblock %}
+
+{% block content %}
+{% set d = deadline_info(job.application_deadline) %}
+<div class="page-header">
+  <div class="container">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb small mb-2">
+        <li class="breadcrumb-item"><a href="{{ url_for('jobs') }}">Jobs</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ job.exam_category }}</li>
+      </ol>
+    </nav>
+    <div class="mb-2 d-flex flex-wrap gap-1">
+      <span class="badge {{ 'text-bg-primary' if job.govt_category == 'Central' else 'text-bg-info' }}">{{ job.govt_category }}</span>
+      <span class="badge text-bg-light border">{{ job.exam_category }}</span>
+      {% if job.is_demo %}<span class="badge badge-demo">Demo data</span>{% endif %}
+      <span class="badge text-bg-{{ d.css_class }}">{{ d.label }}</span>
+    </div>
+    <h1>{{ job.title }}</h1>
+    <p class="text-muted mb-0">{{ job.organization }}</p>
+  </div>
+</div>
+
+<div class="container">
+  {% if job.is_demo %}
+  <div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle"></i>
+    <strong>Demonstration record.</strong> Dates, vacancies, age limits and pay shown here are sample values for a
+    college project, not an official notification. The links below lead to the organisation's official website,
+    where you must find and verify the real notification.
+  </div>
+  {% endif %}
+
+  <div class="row g-4">
+    <!-- ================= LEFT COLUMN ================= -->
+    <div class="col-lg-8">
+      <div class="card card-portal card-static mb-4">
+        <div class="card-body p-4">
+          <h2 class="h5 text-brand mb-3">Job overview</h2>
+          <p class="pre-wrap">{{ job.description or 'No description available.' }}</p>
+          <dl class="row detail-list mb-0">
+            <dt class="col-sm-4">Recruiting organization</dt><dd class="col-sm-8">{{ job.organization }}</dd>
+            <dt class="col-sm-4">Government</dt><dd class="col-sm-8">{{ job.govt_category }}</dd>
+            <dt class="col-sm-4">Exam category</dt><dd class="col-sm-8">{{ job.exam_category }}</dd>
+            <dt class="col-sm-4">Recruitment exam</dt>
+            <dd class="col-sm-8">
+              {% for exam in exams %}
+                <a href="{{ safe_url('exam_details', '#', exam_id=exam.id) }}">{{ exam.name }}</a>{{ ', ' if not loop.last }}
+              {% else %}Not linked{% endfor %}
+            </dd>
+            <dt class="col-sm-4">Vacancies</dt>
+            <dd class="col-sm-8">{{ job.vacancies if job.vacancies is not none else 'Not specified' }}
+              {% if job.vacancies_note %}<br><span class="small text-muted">{{ job.vacancies_note }}</span>{% endif %}</dd>
+            <dt class="col-sm-4">Salary / pay scale</dt><dd class="col-sm-8">{{ job.salary or 'Not specified' }}</dd>
+            <dt class="col-sm-4">Application start</dt><dd class="col-sm-8">{{ job.application_start|format_date }}</dd>
+            <dt class="col-sm-4">Application deadline</dt><dd class="col-sm-8">{{ job.application_deadline|format_date }}</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="card card-portal card-static mb-4">
+        <div class="card-body p-4">
+          <h2 class="h5 text-brand mb-3">Eligibility requirements</h2>
+          <dl class="row detail-list mb-2">
+            <dt class="col-sm-4">Qualification</dt><dd class="col-sm-8">{{ job.required_qualification }}</dd>
+            <dt class="col-sm-4">Age limit</dt>
+            <dd class="col-sm-8">
+              {% if job.min_age and job.max_age %}{{ job.min_age }} to {{ job.max_age }} years
+              {% elif job.max_age %}Up to {{ job.max_age }} years
+              {% elif job.min_age %}{{ job.min_age }} years or above
+              {% else %}Not specified{% endif %}
+            </dd>
+            <dt class="col-sm-4">State requirement</dt><dd class="col-sm-8">{{ job.state_requirement or 'None stored' }}</dd>
+          </dl>
+          <p class="pre-wrap mb-0">{{ job.eligibility_text or '' }}</p>
+        </div>
+      </div>
+
+      <div class="card card-portal card-static mb-4">
+        <div class="card-body p-4">
+          <h2 class="h5 text-brand mb-3">Syllabus / examination pattern</h2>
+          <p class="pre-wrap mb-0">{{ job.syllabus_pattern or 'Not available. See the official notification.' }}</p>
+        </div>
+      </div>
+
+      {% if exams %}
+      <div class="card card-portal card-static mb-4">
+        <div class="card-body p-4">
+          <h2 class="h5 text-brand mb-3">Prepare for this job</h2>
+          <p class="small text-muted">Study material is attached to the recruitment exam, so every job that
+            uses the same exam shares it.</p>
+          {% for exam in exams %}
+          <div class="d-flex flex-wrap justify-content-between align-items-center border rounded p-3 mb-2">
+            <div><strong>{{ exam.name }}</strong><br><span class="small text-muted">{{ exam.conducting_body }}</span></div>
+            <div class="d-flex gap-2 mt-2 mt-md-0">
+              <a class="btn btn-sm btn-outline-primary" href="{{ safe_url('exam_details', '#', exam_id=exam.id) }}">Exam details</a>
+              <a class="btn btn-sm btn-primary" href="{{ safe_url('mock_tests', '#') }}">Mock tests</a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      {% if related_jobs %}
+      <h2 class="h5 text-brand mb-3">Other jobs that use the same exam</h2>
+      <div class="row g-3">
+        {% for job in related_jobs %}
+        <div class="col-md-6">{% include "_job_card.html" %}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- ================= RIGHT COLUMN ================= -->
+    <div class="col-lg-4">
+      <div class="card card-portal card-static mb-4">
+        <div class="card-body p-4">
+          <h2 class="h6 text-uppercase text-muted">Apply</h2>
+          <p class="mb-1"><strong>Last date:</strong> {{ job.application_deadline|format_date }}</p>
+          <p><span class="badge text-bg-{{ d.css_class }}">{{ d.label }}</span></p>
+
+          {% if job.apply_url %}
+          <a class="btn btn-success w-100 mb-2" href="{{ job.apply_url }}" target="_blank" rel="noopener noreferrer">
+            <i class="bi bi-box-arrow-up-right"></i> Apply on official website</a>
+          {% else %}
+          <div class="alert alert-secondary small">No official application link is stored for this record.
+            Search the official website of {{ job.organization }}.</div>
+          {% endif %}
+
+          {% if job.notification_url %}
+          <a class="btn btn-outline-primary w-100 mb-2" href="{{ job.notification_url }}" target="_blank" rel="noopener noreferrer">
+            <i class="bi bi-file-earmark-text"></i> Official notification page</a>
+          {% else %}
+          <p class="small text-muted">No official notification link is stored for this record.</p>
+          {% endif %}
+
+          {% if current_user %}
+          <form method="post" action="{{ url_for('save_job', job_id=job.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="next" value="{{ request.full_path.rstrip('?') }}">
+            <button type="submit" data-no-loading class="btn {{ 'btn-warning' if is_saved else 'btn-outline-secondary' }} w-100">
+              <i class="bi {{ 'bi-bookmark-fill' if is_saved else 'bi-bookmark' }}"></i>
+              {{ 'Saved (click to remove)' if is_saved else 'Save this job' }}</button>
+          </form>
+          {% else %}
+          <a class="btn btn-outline-secondary w-100" href="{{ url_for('login', next=request.path) }}">
+            <i class="bi bi-bookmark"></i> Log in to save</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card card-portal card-static elig-card elig-{{ result.status if result else 'none' }}">
+        <div class="card-body p-4">
+          <h2 class="h6 text-uppercase text-muted">Your eligibility</h2>
+          {% if result %}
+          <p><span class="badge text-bg-{{ result.css_class }} fs-6"><i class="bi {{ result.icon }}"></i> {{ result.label }}</span></p>
+          {% include "_eligibility_result.html" %}
+          <hr>
+          <p class="small text-muted mb-0">Based on your profile and the stored rules only. The final eligibility
+            decision must be verified using the official recruitment notification.</p>
+          {% else %}
+          <p class="small text-muted">Log in to see whether your profile matches this job, or use the checker
+            with any age and qualification.</p>
+          <a class="btn btn-sm btn-primary" href="{{ url_for('eligibility') }}">Open eligibility checker</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

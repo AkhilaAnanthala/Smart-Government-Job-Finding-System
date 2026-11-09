@@ -1,0 +1,52 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Admin - Questions{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h2 class="h5 text-brand mb-0">Practice questions ({{ total }})</h2>
+  <a class="btn btn-primary btn-sm" href="{{ url_for('admin_question_new') }}"><i class="bi bi-plus-lg"></i> Add question</a>
+</div>
+<form method="get" action="{{ url_for('admin_questions') }}" class="card card-portal card-static filter-card mb-3">
+  <div class="card-body"><div class="row g-3">
+    <div class="col-md-3"><label for="q" class="form-label small fw-semibold">Search text</label>
+      <input type="text" class="form-control" id="q" name="q" value="{{ filters.q }}" maxlength="100"></div>
+    <div class="col-md-3"><label for="exam" class="form-label small fw-semibold">Exam</label>
+      <select class="form-select" id="exam" name="exam"><option value="">All</option>
+        {% for value, label in exam_choices %}<option value="{{ value }}" {{ 'selected' if filters.exam == value }}>{{ label }}</option>{% endfor %}</select></div>
+    <div class="col-md-3"><label for="subject" class="form-label small fw-semibold">Subject</label>
+      <select class="form-select" id="subject" name="subject"><option value="">All</option>
+        {% for value, label in subject_choices %}<option value="{{ value }}" {{ 'selected' if filters.subject == value }}>{{ label }}</option>{% endfor %}</select></div>
+    <div class="col-md-3"><label for="difficulty" class="form-label small fw-semibold">Difficulty</label>
+      <select class="form-select" id="difficulty" name="difficulty"><option value="">Any</option>
+        {% for d in DIFFICULTY_LEVELS %}<option value="{{ d }}" {{ 'selected' if filters.difficulty == d }}>{{ d }}</option>{% endfor %}</select></div>
+    <div class="col-12 d-flex gap-2"><button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Search</button>
+      <a class="btn btn-outline-secondary" href="{{ url_for('admin_questions') }}">Clear</a></div>
+  </div></div>
+</form>
+
+<div class="card card-portal card-static"><div class="table-responsive">
+  <table class="table table-portal align-middle mb-0">
+    <thead><tr><th>Question</th><th>Subject</th><th>Answer</th><th>Level</th><th></th></tr></thead>
+    <tbody>
+    {% for q in questions %}
+    <tr>
+      <td>{{ q.question_text[:90] }}{{ '...' if q.question_text|length > 90 }}
+        {% if q.is_demo %}<span class="badge badge-demo">demo</span>{% endif %}</td>
+      <td class="small"><span class="badge text-bg-primary">{{ q.short_code }}</span> {{ q.subject_name }}</td>
+      <td><span class="badge text-bg-success">{{ q.correct_option }}</span></td>
+      <td>{{ q.difficulty }}</td>
+      <td class="text-end text-nowrap">
+        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_question_edit', question_id=q.id) }}"><i class="bi bi-pencil"></i> Edit</a>
+        <form method="post" action="{{ url_for('admin_question_delete', question_id=q.id) }}" class="d-inline"
+              data-confirm="Delete this question? It will also disappear from the answer review of past test attempts.">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+        </form></td>
+    </tr>
+    {% else %}<tr><td colspan="5" class="text-muted">No questions found.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div></div>
+{% set pager_endpoint = 'admin_questions' %}
+{% include "_pager.html" %}
+{% endblock %}

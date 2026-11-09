@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Examinations{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1><i class="bi bi-journal-text"></i> Recruitment Examinations</h1>
+    <p class="text-muted small mb-0">Each exam can be shared by many jobs and has its own subjects and resources.</p>
+  </div>
+</div>
+
+<div class="container">
+  <form method="get" action="{{ url_for('exams') }}" class="card card-portal card-static filter-card mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-lg-5">
+          <label for="q" class="form-label small fw-semibold">Exam name, code or conducting body</label>
+          <input type="text" class="form-control" id="q" name="q" value="{{ filters.q }}" maxlength="100" placeholder="e.g. SSC, Railway, Group-II">
+        </div>
+        <div class="col-6 col-lg-2">
+          <label for="category" class="form-label small fw-semibold">Category</label>
+          <select class="form-select" id="category" name="category">
+            <option value="">All</option>
+            {% for c in EXAM_CATEGORIES %}<option value="{{ c }}" {{ 'selected' if filters.category == c }}>{{ c }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-6 col-lg-2">
+          <label for="govt" class="form-label small fw-semibold">Government</label>
+          <select class="form-select" id="govt" name="govt">
+            <option value="">All</option>
+            {% for g in GOVT_CATEGORIES %}<option value="{{ g }}" {{ 'selected' if filters.govt == g }}>{{ g }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-lg-3 d-flex align-items-end gap-2">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Search</button>
+          <a class="btn btn-outline-secondary" href="{{ url_for('exams') }}">Clear</a>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <h2 class="h5 mb-3">{{ exams|length }} examination{{ '' if exams|length == 1 else 's' }}</h2>
+  <div class="row g-3">
+    {% for exam in exams %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card card-portal h-100">
+        <div class="card-body d-flex flex-column">
+          <div class="mb-2 d-flex flex-wrap gap-1">
+            <span class="badge text-bg-primary">{{ exam.category }}</span>
+            <span class="badge text-bg-light border">{{ exam.short_code }}</span>
+            <span class="badge {{ 'text-bg-primary' if exam.govt_level == 'Central' else 'text-bg-info' }}">{{ exam.govt_level }}</span>
+          </div>
+          <h3 class="h6 job-title">{{ exam.name }}</h3>
+          <p class="small text-muted mb-2">{{ exam.conducting_body }}</p>
+          <p class="small mb-3">{{ exam.description }}</p>
+          <ul class="list-unstyled small job-meta mb-3">
+            <li><i class="bi bi-briefcase"></i> {{ exam.job_count }} job{{ '' if exam.job_count == 1 else 's' }} use this exam</li>
+            <li><i class="bi bi-diagram-3"></i> {{ exam.subject_count }} subject{{ '' if exam.subject_count == 1 else 's' }}</li>
+            <li><i class="bi bi-book"></i> {{ exam.material_count }} study resource{{ '' if exam.material_count == 1 else 's' }}</li>
+            <li><i class="bi bi-file-earmark-text"></i> {{ exam.paper_count }} previous paper link{{ '' if exam.paper_count == 1 else 's' }}</li>
+          </ul>
+          <div class="mt-auto d-flex flex-wrap gap-2">
+            <a class="btn btn-sm btn-primary" href="{{ url_for('exam_details', exam_id=exam.id) }}">Details</a>
+            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('syllabus', exam_id=exam.id) }}">Syllabus</a>
+            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('jobs', exam=exam.id) }}">Jobs</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="col-12"><div class="alert alert-info">No examinations match your filters. <a href="{{ url_for('exams') }}">Clear filters</a>.</div></div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

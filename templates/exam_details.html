@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}{{ exam.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb small mb-2">
+        <li class="breadcrumb-item"><a href="{{ url_for('exams') }}">Examinations</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ exam.short_code }}</li>
+      </ol>
+    </nav>
+    <div class="mb-2 d-flex flex-wrap gap-1">
+      <span class="badge text-bg-primary">{{ exam.category }}</span>
+      <span class="badge text-bg-light border">{{ exam.short_code }}</span>
+      <span class="badge {{ 'text-bg-primary' if exam.govt_level == 'Central' else 'text-bg-info' }}">{{ exam.govt_level }}</span>
+    </div>
+    <h1>{{ exam.name }}</h1>
+    <p class="text-muted mb-0">{{ exam.conducting_body }}</p>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card card-portal card-static mb-4">
+        <div class="card-body p-4">
+          <h2 class="h5 text-brand mb-3">About this exam</h2>
+          <p>{{ exam.description or 'No description available.' }}</p>
+          <h3 class="h6 text-muted text-uppercase">Exam pattern</h3>
+          <p class="pre-wrap">{{ exam.exam_pattern or 'Not available. See the official notification.' }}</p>
+          <a class="btn btn-sm btn-primary" href="{{ url_for('syllabus', exam_id=exam.id) }}"><i class="bi bi-list-check"></i> Full syllabus and pattern</a>
+        </div>
+      </div>
+
+      <h2 class="h5 text-brand mb-3">Subjects</h2>
+      <div class="row g-3 mb-4">
+        {% for s in subjects %}
+        <div class="col-md-6">
+          <div class="card card-portal card-static h-100">
+            <div class="card-body">
+              <h3 class="h6 job-title">{{ s.name }}</h3>
+              <p class="small text-muted">{{ s.description }}</p>
+              <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('materials', subject=s.id) }}">Study materials ({{ s.material_count }})</a>
+                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('practice_questions', subject=s.id) }}">Questions ({{ s.question_count }})</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <div class="col-12"><div class="alert alert-info mb-0">No subjects have been added for this exam yet.</div></div>
+        {% endfor %}
+      </div>
+
+      <h2 class="h5 text-brand mb-3">Previous question papers</h2>
+      {% for p in papers %}{% include "_paper_card.html" %}
+      {% else %}
+      <div class="alert alert-info">No previous paper links have been added for this exam yet.</div>
+      {% endfor %}
+
+      <h2 class="h5 text-brand mt-4 mb-3">Jobs that use this exam</h2>
+      <div class="row g-3">
+        {% for job in jobs %}<div class="col-md-6">{% include "_job_card.html" %}</div>
+        {% else %}
+        <div class="col-12"><div class="alert alert-info mb-0">No jobs are linked to this exam yet.</div></div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card card-portal card-static mb-4">
+        <div class="card-body p-4">
+          <h2 class="h6 text-uppercase text-muted">Mock tests</h2>
+          {% for t in tests %}
+          <div class="border rounded p-2 mb-2">
+            <strong class="small">{{ t.subject_name }}</strong><br>
+            <span class="small text-muted">{{ t.num_questions }} questions &middot; {{ t.duration_minutes }} minutes</span>
+          </div>
+          {% else %}
+          <p class="small text-muted">No mock tests are available for this exam yet.</p>
+          {% endfor %}
+          <a class="btn btn-sm btn-primary w-100 mt-2" href="{{ safe_url('mock_tests', '#', exam=exam.id) }}">Go to mock tests</a>
+        </div>
+      </div>
+
+      <div class="card card-portal card-static mb-4">
+        <div class="card-body p-4">
+          <h2 class="h6 text-uppercase text-muted">Official sources</h2>
+          {% if exam.official_url %}
+          <a class="btn btn-sm btn-success w-100 mb-3" href="{{ exam.official_url }}" target="_blank" rel="noopener noreferrer">
+            <i class="bi bi-box-arrow-up-right"></i> Official website</a>
+          {% else %}
+          <p class="small text-muted">No official website link has been configured for this exam yet. Search the official website of {{ exam.conducting_body }}.</p>
+          {% endif %}
+          {% for r in resources %}<div class="mb-3">{% include "_official_resource.html" %}</div>{% endfor %}
+        </div>
+      </div>
+
+      <a class="btn btn-outline-primary w-100" href="{{ url_for('jobs', exam=exam.id) }}"><i class="bi bi-briefcase"></i> View jobs for this exam</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

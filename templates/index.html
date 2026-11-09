@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<!-- ===================== HERO + SEARCH ===================== -->
+<section class="hero">
+  <div class="container">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-7">
+        <!-- <span class="hero-pill"><i class="bi bi-mortarboard"></i> College Community Service Project</span> -->
+        <h1 class="display-5">Find Government Jobs. Check Eligibility. Prepare Smarter.</h1>
+        <p class="lead mt-3">One place for Central Government and Andhra Pradesh Government job
+          notifications, eligibility checks, syllabi, previous papers and timed mock tests.</p>
+        <div class="d-flex flex-wrap gap-2 mt-4">
+          <a class="btn btn-light btn-lg fw-semibold" href="{{ safe_url('jobs', '/jobs') }}">
+            <i class="bi bi-briefcase"></i> Browse Jobs</a>
+          <a class="btn btn-outline-light btn-lg" href="{{ safe_url('eligibility', '/eligibility') }}">
+            <i class="bi bi-check2-square"></i> Check Eligibility</a>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="hero-card p-4" id="search">
+          <h2 class="h5 text-brand mb-3"><i class="bi bi-search"></i> Search Government Jobs</h2>
+          <form method="get" action="{{ safe_url('jobs', '/jobs') }}">
+            <div class="mb-3">
+              <label for="q" class="form-label small fw-semibold">Job title or organization</label>
+              <input type="text" class="form-control" id="q" name="q" maxlength="100"
+                     placeholder="e.g. Clerk, SSC, Railway, APPSC">
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-sm-6">
+                <label for="govt" class="form-label small fw-semibold">Government</label>
+                <select class="form-select" id="govt" name="govt">
+                  <option value="">All</option>
+                  {% for g in GOVT_CATEGORIES %}<option value="{{ g }}">{{ g }}</option>{% endfor %}
+                </select>
+              </div>
+              <div class="col-sm-6">
+                <label for="category" class="form-label small fw-semibold">Exam category</label>
+                <select class="form-select" id="category" name="category">
+                  <option value="">All</option>
+                  {% for c in EXAM_CATEGORIES %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i> Search Jobs</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== STATISTICS ===================== -->
+<section class="container stats-row">
+  <div class="row g-3">
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-briefcase"></i></div>
+        <div><div class="stat-number">{{ stats.open_jobs }}</div>
+          <div class="stat-label">Open notifications (of {{ stats.jobs }} listed)</div></div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-journal-text"></i></div>
+        <div><div class="stat-number">{{ stats.exams }}</div><div class="stat-label">Recruitment exams</div></div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-patch-question"></i></div>
+        <div><div class="stat-number">{{ stats.questions }}</div><div class="stat-label">Practice questions</div></div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-stopwatch"></i></div>
+        <div><div class="stat-number">{{ stats.mock_tests }}</div><div class="stat-label">Timed mock tests</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== LATEST JOBS ===================== -->
+<section class="section container">
+  <div class="d-flex flex-wrap justify-content-between align-items-end mb-3">
+    <div>
+      <h2 class="section-title">Latest Job Notifications</h2>
+      <p class="section-sub mb-0">Sample recruitment records for demonstration. Always confirm on the official website.</p>
+    </div>
+    <a class="btn btn-outline-primary btn-sm mt-2" href="{{ safe_url('jobs', '/jobs') }}">View all jobs <i class="bi bi-arrow-right"></i></a>
+  </div>
+  <div class="row g-3">
+    {% for job in latest_jobs %}
+    <div class="col-md-6 col-lg-4">{% include "_job_card.html" %}</div>
+    {% else %}
+    <div class="col-12"><div class="alert alert-info mb-0">No open job notifications right now.
+      (Run <code>python seed_data.py</code> to load the sample data.)</div></div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- ===================== POPULAR EXAMS ===================== -->
+<section class="section container">
+  <div class="d-flex flex-wrap justify-content-between align-items-end mb-3">
+    <div>
+      <h2 class="section-title">Popular Examinations</h2>
+      <p class="section-sub mb-0">Many jobs share one recruitment exam, so study material is reused.</p>
+    </div>
+    <a class="btn btn-outline-primary btn-sm mt-2" href="{{ safe_url('exams', '/exams') }}">All examinations <i class="bi bi-arrow-right"></i></a>
+  </div>
+  <div class="row g-3">
+    {% for exam in popular_exams %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card card-portal h-100">
+        <div class="card-body d-flex flex-column">
+          <div class="mb-2">
+            <span class="badge text-bg-primary">{{ exam.category }}</span>
+            <span class="badge text-bg-light border">{{ exam.short_code }}</span>
+          </div>
+          <h3 class="h6 job-title">{{ exam.name }}</h3>
+          <p class="small text-muted mb-2">{{ exam.conducting_body }}</p>
+          <p class="small mb-3">{{ exam.description }}</p>
+          <div class="mt-auto d-flex justify-content-between align-items-center">
+            <span class="small text-muted"><i class="bi bi-briefcase"></i> {{ exam.job_count }} job{{ '' if exam.job_count == 1 else 's' }}</span>
+            <a class="btn btn-sm btn-outline-primary" href="{{ safe_url('exam_details', '#', exam_id=exam.id) }}">Exam details</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- ===================== PREPARATION RESOURCES ===================== -->
+<section class="section container">
+  <h2 class="section-title">Preparation Resources</h2>
+  <p class="section-sub">Syllabus, previous papers and study material organised by examination and subject.</p>
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <a class="feature-tile card card-portal p-3" href="{{ safe_url('exams', '/exams') }}">
+        <div class="stat-icon"><i class="bi bi-list-check"></i></div>
+        <h3 class="h6 job-title">Syllabus and Exam Pattern</h3>
+        <p class="small text-muted mb-0">See stages, subjects and marking scheme for each examination.</p>
+      </a>
+    </div>
+    <div class="col-md-4">
+      <a class="feature-tile card card-portal p-3" href="{{ safe_url('previous_papers', '/previous-papers') }}">
+        <div class="stat-icon"><i class="bi bi-file-earmark-text"></i></div>
+        <h3 class="h6 job-title">Previous Question Papers</h3>
+        <p class="small text-muted mb-0">Links to previous papers published by the official bodies.</p>
+      </a>
+    </div>
+    <div class="col-md-4">
+      <a class="feature-tile card card-portal p-3" href="{{ safe_url('materials', '/materials') }}">
+        <div class="stat-icon"><i class="bi bi-book"></i></div>
+        <h3 class="h6 job-title">Study Materials</h3>
+        <p class="small text-muted mb-0">Official links and notes, clearly marked as official or additional.</p>
+      </a>
+    </div>
+  </div>
+
+  <h3 class="h5 text-brand mb-3"><i class="bi bi-patch-check"></i> Official Resource Links</h3>
+  <div class="row g-3">
+    {% for r in resources %}
+    <div class="col-md-6">
+      <div class="card card-portal card-static resource-item h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start gap-2">
+            <h4 class="h6 mb-1">{{ r.title }}</h4>
+            <span class="badge text-bg-light border">{{ r.resource_kind }}</span>
+          </div>
+          <p class="small text-muted mb-2">{{ r.description }}</p>
+          <div class="d-flex justify-content-between align-items-center">
+            <a class="btn btn-sm btn-outline-primary" href="{{ r.url }}" target="_blank" rel="noopener noreferrer">
+              Open official site <i class="bi bi-box-arrow-up-right"></i></a>
+            <span class="small text-muted">
+              {% if r.last_verified %}Verified {{ r.last_verified|format_date }}{% else %}Not yet verified{% endif %}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- ===================== MOCK TESTS ===================== -->
+<section class="section container">
+  <div class="d-flex flex-wrap justify-content-between align-items-end mb-3">
+    <div>
+      <h2 class="section-title">Mock Tests</h2>
+      <p class="section-sub mb-0">Timed multiple-choice practice with instant scoring and explanations.
+        Questions are original practice questions, not official previous-year questions.</p>
+    </div>
+    <a class="btn btn-outline-primary btn-sm mt-2" href="{{ safe_url('mock_tests', '/mock-tests') }}">All mock tests <i class="bi bi-arrow-right"></i></a>
+  </div>
+  <div class="row g-3">
+    {% for t in mock_tests %}
+    <div class="col-md-6 col-lg-3">
+      <div class="card card-portal h-100">
+        <div class="card-body d-flex flex-column">
+          <span class="badge text-bg-primary align-self-start mb-2">{{ t.short_code }}</span>
+          <h3 class="h6 job-title">{{ t.subject_name }}</h3>
+          <p class="small text-muted mb-3">
+            <i class="bi bi-question-circle"></i> {{ t.num_questions }} questions<br>
+            <i class="bi bi-clock"></i> {{ t.duration_minutes }} minutes</p>
+          <a class="btn btn-sm btn-primary mt-auto" href="{{ safe_url('mock_tests', '/mock-tests') }}">Go to mock tests</a>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="col-12"><div class="alert alert-info mb-0">No mock tests available yet.</div></div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- ===================== CALL TO ACTION ===================== -->
+{% if not current_user %}
+<section class="container mt-5">
+  <div class="card card-portal card-static bg-brand-light border-0">
+    <div class="card-body p-4 d-md-flex justify-content-between align-items-center">
+      <div>
+        <h2 class="h5 text-brand mb-1">Create a free account</h2>
+        <p class="mb-0 text-muted">Save jobs, track mock test scores and see jobs that match your qualification.</p>
+      </div>
+      <a class="btn btn-primary mt-3 mt-md-0" href="{{ url_for('register') }}">Register now</a>
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

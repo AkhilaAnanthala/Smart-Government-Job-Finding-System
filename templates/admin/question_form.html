@@ -1,0 +1,31 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{{ 'Edit question' if existing else 'Add question' }}{% endblock %}
+
+{% block admin_content %}
+{% from "admin/_macros.html" import text_input, text_area, select_input, checkbox %}
+<h2 class="h5 text-brand mb-3">{{ 'Edit question' if existing else 'Add a practice question' }}</h2>
+{% if errors.get('_form') %}<div class="alert alert-danger">{{ errors['_form'] }}</div>{% endif %}
+<div class="alert alert-warning small"><i class="bi bi-exclamation-triangle"></i>
+  Write original questions only. Keep "demo" ticked for questions that are not official previous-year questions.
+  Changing a correct answer does not re-score past attempts.</div>
+
+<form method="post" action="{{ url_for('admin_question_edit', question_id=existing.id) if existing else url_for('admin_question_new') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="card card-portal card-static mb-3"><div class="card-body p-4"><div class="row g-3">
+    {{ select_input(form, errors, 'subject_id', 'Subject', subject_choices, required=True, blank='-- Select subject --', col='col-md-8') }}
+    {{ select_input(form, errors, 'difficulty', 'Difficulty', DIFFICULTY_LEVELS, required=True, col='col-md-4') }}
+    {{ text_area(form, errors, 'question_text', 'Question', rows=3, required=True, maxlength=1000) }}
+    {{ text_input(form, errors, 'option_a', 'Option A', required=True, maxlength=300) }}
+    {{ text_input(form, errors, 'option_b', 'Option B', required=True, maxlength=300) }}
+    {{ text_input(form, errors, 'option_c', 'Option C', required=True, maxlength=300) }}
+    {{ text_input(form, errors, 'option_d', 'Option D', required=True, maxlength=300) }}
+    {{ select_input(form, errors, 'correct_option', 'Correct answer', ['A', 'B', 'C', 'D'], required=True, blank='-- Select --', col='col-md-4') }}
+    {{ checkbox(form, 'is_demo', 'Practice question created for demonstration', col='col-md-8') }}
+    {{ text_area(form, errors, 'explanation', 'Explanation (shown after the test)', rows=2, maxlength=1000) }}
+  </div></div></div>
+  <div class="d-flex gap-2">
+    <button type="submit" class="btn btn-primary">Save question</button>
+    <a class="btn btn-outline-secondary" href="{{ url_for('admin_questions') }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,58 @@
+{# Shared profile fields. Needs: form, errors, states, qualifications, categories, today_iso #}
+<div class="row g-3">
+  <div class="col-md-6">
+    <label for="full_name" class="form-label fw-semibold">Full name</label>
+    <input type="text" class="form-control {{ 'is-invalid' if errors.get('full_name') }}" id="full_name"
+           name="full_name" value="{{ form.get('full_name', '') }}" maxlength="100" required>
+    {% if errors.get('full_name') %}<div class="invalid-feedback">{{ errors['full_name'] }}</div>{% endif %}
+  </div>
+
+  <div class="col-md-6">
+    <label for="date_of_birth" class="form-label fw-semibold">Date of birth</label>
+    <input type="date" class="form-control {{ 'is-invalid' if errors.get('date_of_birth') }}" id="date_of_birth"
+           name="date_of_birth" value="{{ form.get('date_of_birth', '') }}" max="{{ today_iso }}" required>
+    {% if errors.get('date_of_birth') %}<div class="invalid-feedback">{{ errors['date_of_birth'] }}</div>{% endif %}
+  </div>
+
+  <div class="col-md-6">
+    <label for="highest_qualification" class="form-label fw-semibold">Highest qualification</label>
+    <select class="form-select {{ 'is-invalid' if errors.get('highest_qualification') }}"
+            id="highest_qualification" name="highest_qualification" required>
+      <option value="">-- Select --</option>
+      {% for q in qualifications %}
+      <option value="{{ q }}" {{ 'selected' if form.get('highest_qualification') == q }}>{{ q }}</option>
+      {% endfor %}
+    </select>
+    {% if errors.get('highest_qualification') %}<div class="invalid-feedback">{{ errors['highest_qualification'] }}</div>{% endif %}
+  </div>
+
+  <div class="col-md-6">
+    <label for="preferred_category" class="form-label fw-semibold">Preferred job category <span class="text-muted fw-normal">(optional)</span></label>
+    <select class="form-select {{ 'is-invalid' if errors.get('preferred_category') }}"
+            id="preferred_category" name="preferred_category">
+      <option value="">No preference</option>
+      {% for c in categories %}
+      <option value="{{ c }}" {{ 'selected' if form.get('preferred_category') == c }}>{{ c }}</option>
+      {% endfor %}
+    </select>
+    {% if errors.get('preferred_category') %}<div class="invalid-feedback">{{ errors['preferred_category'] }}</div>{% endif %}
+  </div>
+
+  <div class="col-md-6">
+    <label for="state" class="form-label fw-semibold">State</label>
+    <select class="form-select {{ 'is-invalid' if errors.get('state') }}" id="state" name="state" required>
+      <option value="">-- Select --</option>
+      {% for s in states %}
+      <option value="{{ s }}" {{ 'selected' if form.get('state') == s }}>{{ s }}</option>
+      {% endfor %}
+    </select>
+    {% if errors.get('state') %}<div class="invalid-feedback">{{ errors['state'] }}</div>{% endif %}
+  </div>
+
+  <div class="col-md-6">
+    <label for="district" class="form-label fw-semibold">District</label>
+    <input type="text" class="form-control {{ 'is-invalid' if errors.get('district') }}" id="district"
+           name="district" value="{{ form.get('district', '') }}" maxlength="60" required>
+    {% if errors.get('district') %}<div class="invalid-feedback">{{ errors['district'] }}</div>{% endif %}
+  </div>
+</div>

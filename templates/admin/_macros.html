@@ -1,0 +1,51 @@
+{# Form helpers. Always pass form (dict) and errors (dict). #}
+{% macro text_input(form, errors, name, label, type='text', col='col-md-6', required=False, help='', maxlength=200, lo=none, hi=none, placeholder='') %}
+<div class="{{ col }}">
+  <label for="{{ name }}" class="form-label fw-semibold">{{ label }}{% if required %} <span class="text-danger">*</span>{% endif %}</label>
+  <input type="{{ type }}" class="form-control{{ ' is-invalid' if errors.get(name) }}" id="{{ name }}" name="{{ name }}"
+         value="{{ form.get(name, '') }}"
+         {% if type not in ('number', 'date') %}maxlength="{{ maxlength }}"{% endif %}
+         {% if lo is not none %}min="{{ lo }}"{% endif %} {% if hi is not none %}max="{{ hi }}"{% endif %}
+         {% if placeholder %}placeholder="{{ placeholder }}"{% endif %} {{ 'required' if required }}>
+  {% if errors.get(name) %}<div class="invalid-feedback">{{ errors[name] }}</div>{% endif %}
+  {% if help %}<div class="form-text">{{ help }}</div>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro text_area(form, errors, name, label, rows=3, col='col-12', required=False, help='', maxlength=4000) %}
+<div class="{{ col }}">
+  <label for="{{ name }}" class="form-label fw-semibold">{{ label }}{% if required %} <span class="text-danger">*</span>{% endif %}</label>
+  <textarea class="form-control{{ ' is-invalid' if errors.get(name) }}" id="{{ name }}" name="{{ name }}" rows="{{ rows }}"
+            maxlength="{{ maxlength }}" {{ 'required' if required }}>{{ form.get(name, '') }}</textarea>
+  {% if errors.get(name) %}<div class="invalid-feedback">{{ errors[name] }}</div>{% endif %}
+  {% if help %}<div class="form-text">{{ help }}</div>{% endif %}
+</div>
+{% endmacro %}
+
+{# options: a list of plain strings, or of (value, label) pairs #}
+{% macro select_input(form, errors, name, label, options, col='col-md-6', required=False, blank=none, help='') %}
+<div class="{{ col }}">
+  <label for="{{ name }}" class="form-label fw-semibold">{{ label }}{% if required %} <span class="text-danger">*</span>{% endif %}</label>
+  <select class="form-select{{ ' is-invalid' if errors.get(name) }}" id="{{ name }}" name="{{ name }}" {{ 'required' if required }}>
+    {% if blank is not none %}<option value="">{{ blank }}</option>{% endif %}
+    {% for opt in options %}
+      {% if opt is string %}{% set value = opt %}{% set text = opt %}
+      {% else %}{% set value = opt[0] %}{% set text = opt[1] %}{% endif %}
+      <option value="{{ value }}" {{ 'selected' if form.get(name)|string == value|string }}>{{ text }}</option>
+    {% endfor %}
+  </select>
+  {% if errors.get(name) %}<div class="invalid-feedback">{{ errors[name] }}</div>{% endif %}
+  {% if help %}<div class="form-text">{{ help }}</div>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro checkbox(form, name, label, help='', col='col-md-6') %}
+<div class="{{ col }}">
+  <div class="form-check">
+    <input class="form-check-input" type="checkbox" id="{{ name }}" name="{{ name }}" value="1"
+           {{ 'checked' if form.get(name) in ('1', 1) }}>
+    <label class="form-check-label" for="{{ name }}">{{ label }}</label>
+    {% if help %}<div class="form-text">{{ help }}</div>{% endif %}
+  </div>
+</div>
+{% endmacro %}

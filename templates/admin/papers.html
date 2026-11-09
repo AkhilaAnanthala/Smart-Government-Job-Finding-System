@@ -1,0 +1,69 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Admin - Previous Papers{% endblock %}
+
+{% block admin_content %}
+{% from "admin/_macros.html" import text_input, select_input, checkbox %}
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card card-portal card-static"><div class="card-body p-4">
+      <h2 class="h6 text-uppercase text-muted mb-3">{{ 'Edit paper' if editing else 'Add previous paper' }}</h2>
+      <form method="post" enctype="multipart/form-data" action="{{ url_for('admin_paper_save') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if editing %}<input type="hidden" name="id" value="{{ editing.id }}">{% endif %}
+        <div class="row g-3">
+          {{ select_input(form, {}, 'exam_id', 'Exam', exam_choices, col='col-12', required=True, blank='-- Select exam --') }}
+          {{ text_input(form, {}, 'title', 'Title', required=True, col='col-12') }}
+          {{ text_input(form, {}, 'year', 'Year', type='number', col='col-6', lo=1990, hi=2100) }}
+          {{ text_input(form, {}, 'url', 'External link', type='url', maxlength=500, col='col-12', placeholder='https://...') }}
+          <div class="col-12"><label for="file" class="form-label fw-semibold">PDF file (max 5 MB)</label>
+            <input type="file" class="form-control" id="file" name="file" accept="application/pdf,.pdf">
+            {% if editing and editing.file_path %}
+            <div class="form-text">Current file: <a href="{{ url_for('paper_file', paper_id=editing.id) }}" target="_blank" rel="noopener noreferrer">open PDF</a>. A new file replaces it.</div>
+            <div class="form-check mt-2"><input class="form-check-input" type="checkbox" id="remove_file" name="remove_file" value="1">
+              <label class="form-check-label" for="remove_file">Remove the PDF (needs a link)</label></div>
+            {% endif %}</div>
+          {{ checkbox(form, 'is_official', 'Official source', col='col-12') }}
+        </div>
+        <div class="d-flex gap-2 mt-3"><button type="submit" class="btn btn-primary">Save</button>
+          {% if editing %}<a class="btn btn-outline-secondary" href="{{ url_for('admin_papers') }}">Cancel</a>{% endif %}</div>
+      </form>
+    </div></div>
+  </div>
+
+  <div class="col-lg-8">
+    <form method="get" action="{{ url_for('admin_papers') }}" class="d-flex flex-wrap gap-2 align-items-end mb-3">
+      <div class="flex-grow-1"><label for="exam" class="form-label small fw-semibold mb-1">Show papers of</label>
+        <select class="form-select" id="exam" name="exam"><option value="">All exams</option>
+          {% for value, label in exam_choices %}<option value="{{ value }}" {{ 'selected' if filters.exam == value }}>{{ label }}</option>{% endfor %}</select></div>
+      <button type="submit" class="btn btn-primary">Filter</button>
+    </form>
+    <h2 class="h6 text-muted">{{ total }} paper link{{ '' if total == 1 else 's' }}</h2>
+    <div class="card card-portal card-static"><div class="table-responsive">
+      <table class="table table-portal align-middle mb-0">
+        <thead><tr><th>Paper</th><th>Exam</th><th>Year</th><th>Source</th><th>Resource</th><th></th></tr></thead>
+        <tbody>
+        {% for p in papers %}
+        <tr>
+          <td>{{ p.title }}</td><td><span class="badge text-bg-primary">{{ p.short_code }}</span></td>
+          <td>{{ p.year or '-' }}</td>
+          <td>{% if p.is_official %}<span class="badge text-bg-success">Official</span>{% else %}<span class="badge text-bg-secondary">Additional</span>{% endif %}</td>
+          <td class="small">
+            {% if p.file_path %}<a href="{{ url_for('paper_file', paper_id=p.id) }}" target="_blank" rel="noopener noreferrer"><i class="bi bi-file-earmark-pdf"></i> PDF</a>{% endif %}
+            {% if p.url %}<a href="{{ p.url }}" target="_blank" rel="noopener noreferrer"><i class="bi bi-link-45deg"></i> Link</a>{% endif %}</td>
+          <td class="text-end text-nowrap">
+            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_papers', edit=p.id, exam=filters.exam) }}"><i class="bi bi-pencil"></i></a>
+            <form method="post" action="{{ url_for('admin_paper_delete', paper_id=p.id) }}" class="d-inline"
+                  data-confirm="Delete '{{ p.title }}'{{ ' and its uploaded PDF' if p.file_path }}?">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+            </form></td>
+        </tr>
+        {% else %}<tr><td colspan="6" class="text-muted">No previous papers yet.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div></div>
+    {% set pager_endpoint = 'admin_papers' %}
+    {% include "_pager.html" %}
+  </div>
+</div>
+{% endblock %}

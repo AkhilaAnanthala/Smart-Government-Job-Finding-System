@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}{{ test.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+  <noscript><div class="alert alert-danger">JavaScript is required to take the test. Please enable it and reload this page.</div></noscript>
+
+  <!-- Top bar: test name, progress and timer -->
+  <div class="card card-portal card-static test-topbar mb-3">
+    <div class="card-body py-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <div>
+        <strong>{{ test.title }}</strong>
+        <div class="small text-muted">{{ test.exam_name }} &middot; {{ test.subject_name }} &middot; practice questions (demo)</div>
+      </div>
+      <div class="d-flex align-items-center gap-3">
+        <span class="small text-muted"><span id="answered-count">0</span> of {{ total }} answered</span>
+        <span class="timer-badge" id="timer" role="timer"><i class="bi bi-stopwatch"></i> <span id="timer-text">--:--</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- Question area -->
+    <div class="col-lg-8">
+      <div class="card card-portal card-static">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="badge text-bg-primary fs-6" id="q-number">Question 1 of {{ total }}</span>
+            <span class="small text-muted" id="save-status" aria-live="polite"></span>
+          </div>
+          <p class="fs-5 fw-semibold mb-3" id="q-text"></p>
+          <div id="q-options" class="d-grid gap-2" role="radiogroup" aria-labelledby="q-text"></div>
+
+          <div class="d-flex flex-wrap justify-content-between gap-2 mt-4">
+            <button type="button" class="btn btn-outline-primary" id="btn-prev"><i class="bi bi-arrow-left"></i> Previous</button>
+            <button type="button" class="btn btn-outline-secondary" id="btn-clear">Clear answer</button>
+            <button type="button" class="btn btn-primary" id="btn-next">Next <i class="bi bi-arrow-right"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Question palette and submit -->
+    <div class="col-lg-4">
+      <div class="card card-portal card-static">
+        <div class="card-body p-4">
+          <h2 class="h6 text-uppercase text-muted">Question palette</h2>
+          <div class="palette mb-3" id="palette"></div>
+          <p class="small text-muted mb-3">
+            <span class="legend-box legend-answered"></span> Answered
+            <span class="legend-box legend-open ms-2"></span> Not answered</p>
+          <button type="button" class="btn btn-success w-100" id="btn-submit"><i class="bi bi-check2-circle"></i> Submit test</button>
+          <p class="small text-muted mt-2 mb-0">Your answers are saved as you go. The test submits automatically when time runs out.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation before final submission -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title h5" id="confirmModalLabel">Submit your test?</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p id="modal-summary"></p>
+        <p class="small text-muted mb-0">After you submit, you cannot change your answers.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Go back</button>
+        <button type="button" class="btn btn-success" id="btn-confirm-submit">Yes, submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<form method="post" id="submit-form" action="{{ url_for('submit_test', attempt_id=attempt.id) }}" data-no-loading>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="answers" id="answers-input" value="">
+</form>
+
+<script type="application/json" id="test-data">{{ payload|tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/mock_test.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,28 @@
+{# Needs: p (previous paper row with exam_name, short_code) #}
+<div class="card card-portal card-static mb-2">
+  <div class="card-body py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div>
+      <div class="mb-1 d-flex flex-wrap gap-1">
+        <span class="badge text-bg-primary">{{ p.short_code }}</span>
+        {% if p.is_official %}
+        <span class="badge text-bg-success"><i class="bi bi-patch-check"></i> Official</span>
+        {% else %}
+        <span class="badge text-bg-secondary">Additional resource</span>
+        {% endif %}
+      </div>
+      <strong><i class="bi bi-file-earmark-text text-brand"></i> {{ p.title }}</strong>
+      <div class="small text-muted">{{ p.exam_name }} &middot; Year: {{ p.year if p.year else 'not specified' }}</div>
+    </div>
+    <div class="d-flex gap-2">
+      {% if p.file_path %}
+      <a class="btn btn-sm btn-primary" href="{{ url_for('paper_file', paper_id=p.id) }}"
+         target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> Open</a>
+      <a class="btn btn-sm btn-outline-primary" href="{{ url_for('paper_file', paper_id=p.id, download=1) }}"
+         data-no-loading><i class="bi bi-download"></i> Download</a>
+      {% elif p.url %}
+      <a class="btn btn-sm btn-primary" href="{{ p.url }}" target="_blank" rel="noopener noreferrer"
+         title="Opens an external website"><i class="bi bi-box-arrow-up-right"></i> Open link</a>
+      {% endif %}
+    </div>
+  </div>
+</div>

@@ -1,0 +1,68 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Admin Overview{% endblock %}
+
+{% block admin_content %}
+{% for a in alerts %}
+<div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2 py-2">
+  <span><i class="bi bi-exclamation-triangle"></i> {{ a.text }}</span>
+  <a class="btn btn-sm btn-outline-dark" href="{{ url_for(a.endpoint) }}">{{ a.action }}</a>
+</div>
+{% endfor %}
+
+<h2 class="h5 text-brand mb-3">Portal statistics</h2>
+<div class="row g-3 mb-4">
+  {% for label, value, icon in cards %}
+  <div class="col-6 col-lg-3">
+    <div class="stat-card"><div class="stat-icon"><i class="bi {{ icon }}"></i></div>
+      <div><div class="stat-number">{{ value }}</div><div class="stat-label">{{ label }}</div></div></div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="d-flex flex-wrap gap-2 mb-4">
+  <a class="btn btn-primary btn-sm" href="{{ url_for('admin_job_new') }}"><i class="bi bi-plus-lg"></i> Add job</a>
+  <a class="btn btn-primary btn-sm" href="{{ url_for('admin_material_new') }}"><i class="bi bi-plus-lg"></i> Add study material</a>
+  <a class="btn btn-primary btn-sm" href="{{ url_for('admin_question_new') }}"><i class="bi bi-plus-lg"></i> Add question</a>
+  <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin_exam_new') }}"><i class="bi bi-plus-lg"></i> Add exam</a>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card card-portal card-static h-100"><div class="card-body">
+      <h2 class="h6 text-uppercase text-muted">Recent registrations</h2>
+      {% for u in recent_users %}
+      <div class="d-flex justify-content-between border-bottom py-2 small">
+        <span><strong>{{ u.full_name }}</strong><br><span class="text-muted">{{ u.email }}</span></span>
+        <span class="text-end"><span class="badge {{ 'text-bg-danger' if u.role == 'admin' else 'text-bg-primary' }}">{{ u.role }}</span><br>
+          <span class="text-muted">{{ u.created_at[:10]|format_date }}</span></span>
+      </div>
+      {% else %}<p class="small text-muted mb-0">No users yet.</p>{% endfor %}
+      <a class="small" href="{{ url_for('admin_users') }}">All users</a>
+    </div></div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card card-portal card-static h-100"><div class="card-body">
+      <h2 class="h6 text-uppercase text-muted">Recent mock test attempts</h2>
+      {% for a in recent_attempts %}
+      <div class="d-flex justify-content-between border-bottom py-2 small">
+        <span><strong>{{ a.full_name }}</strong><br><span class="text-muted">{{ a.test_title }}</span></span>
+        <span class="badge text-bg-primary align-self-center">{{ '%g'|format(a.score_percent) }}%</span>
+      </div>
+      {% else %}<p class="small text-muted mb-0">No attempts yet.</p>{% endfor %}
+      <a class="small" href="{{ url_for('admin_results') }}">All results</a>
+    </div></div>
+  </div>
+  <div class="col-12">
+    <div class="card card-portal card-static"><div class="card-body">
+      <h2 class="h6 text-uppercase text-muted">Mock test usage</h2>
+      <div class="table-responsive"><table class="table table-portal align-middle mb-0">
+        <thead><tr><th>Test</th><th>Submitted attempts</th><th>Average score</th></tr></thead>
+        <tbody>
+        {% for t in usage %}
+        <tr><td>{{ t.title }}</td><td>{{ t.attempts }}</td><td>{{ ('%g'|format(t.avg|round(1)) ~ '%') if t.attempts else '-' }}</td></tr>
+        {% else %}<tr><td colspan="3" class="text-muted">No mock tests yet.</td></tr>{% endfor %}
+        </tbody></table></div>
+    </div></div>
+  </div>
+</div>
+{% endblock %}

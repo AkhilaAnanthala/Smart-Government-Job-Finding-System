@@ -1,0 +1,54 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Admin - Mock Tests{% endblock %}
+
+{% block admin_content %}
+{% from "admin/_macros.html" import text_input, select_input, checkbox %}
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card card-portal card-static"><div class="card-body p-4">
+      <h2 class="h6 text-uppercase text-muted mb-3">{{ 'Edit mock test' if editing else 'Add mock test' }}</h2>
+      <form method="post" action="{{ url_for('admin_mock_test_save') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if editing %}<input type="hidden" name="id" value="{{ editing.id }}">{% endif %}
+        <div class="row g-3">
+          {{ select_input(form, {}, 'subject_id', 'Subject', subject_choices, col='col-12', required=True, blank='-- Select subject --', help='The exam is taken from the subject. One test per subject.') }}
+          {{ text_input(form, {}, 'title', 'Title', col='col-12', maxlength=150, help='Leave empty to generate a title.') }}
+          {{ text_input(form, {}, 'duration_minutes', 'Duration (minutes)', type='number', col='col-6', lo=1, hi=180, required=True) }}
+          {{ text_input(form, {}, 'num_questions', 'Questions per attempt', type='number', col='col-6', lo=1, hi=100, required=True) }}
+          {{ checkbox(form, 'is_active', 'Active (visible to students)', col='col-12') }}
+        </div>
+        <div class="d-flex gap-2 mt-3"><button type="submit" class="btn btn-primary">Save</button>
+          {% if editing %}<a class="btn btn-outline-secondary" href="{{ url_for('admin_mock_tests') }}">Cancel</a>{% endif %}</div>
+      </form>
+    </div></div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="card card-portal card-static"><div class="table-responsive">
+      <table class="table table-portal align-middle mb-0">
+        <thead><tr><th>Test</th><th>Time</th><th>Questions</th><th>Status</th><th>Attempts</th><th></th></tr></thead>
+        <tbody>
+        {% for t in tests %}
+        <tr>
+          <td><strong>{{ t.title }}</strong><br><span class="small text-muted">{{ t.short_code }} &middot; {{ t.subject_name }}</span></td>
+          <td>{{ t.duration_minutes }} min</td>
+          <td>{{ t.num_questions }}
+            {% if t.available < t.num_questions %}<br><span class="badge text-bg-warning" title="Only the available questions are used">only {{ t.available }} available</span>
+            {% else %}<br><span class="small text-muted">{{ t.available }} available</span>{% endif %}</td>
+          <td>{% if t.is_active %}<span class="badge text-bg-success">Active</span>{% else %}<span class="badge text-bg-secondary">Hidden</span>{% endif %}</td>
+          <td>{{ t.attempts }}</td>
+          <td class="text-end text-nowrap">
+            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_mock_tests', edit=t.id) }}"><i class="bi bi-pencil"></i></a>
+            <form method="post" action="{{ url_for('admin_mock_test_delete', test_id=t.id) }}" class="d-inline"
+                  data-confirm="Delete the test '{{ t.title }}'? All {{ t.attempts }} submitted attempt(s) will be deleted too.">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+            </form></td>
+        </tr>
+        {% else %}<tr><td colspan="6" class="text-muted">No mock tests yet.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div></div>
+  </div>
+</div>
+{% endblock %}

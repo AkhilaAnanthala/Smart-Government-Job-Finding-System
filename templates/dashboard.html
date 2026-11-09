@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div>
+      <h1>Welcome, {{ current_user.full_name.split(' ')[0] }}!</h1>
+      <p class="text-muted small mb-0">Your personalised overview of jobs, deadlines and preparation.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-primary btn-sm" href="{{ url_for('eligibility', use_profile=1) }}"><i class="bi bi-check2-square"></i> Check my eligibility</a>
+      <a class="btn btn-outline-primary btn-sm" href="{{ url_for('jobs') }}"><i class="bi bi-briefcase"></i> Browse jobs</a>
+      <a class="btn btn-primary btn-sm" href="{{ url_for('mock_tests') }}"><i class="bi bi-stopwatch"></i> Mock tests</a>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  {% for a in active_attempts %}
+  <div class="alert alert-info d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <span><i class="bi bi-hourglass-split"></i> <strong>Continue your test:</strong> {{ a.title }} (about {{ a.minutes_left }} min left)</span>
+    <a class="btn btn-sm btn-warning" href="{{ url_for('take_test', attempt_id=a.id) }}">Resume</a>
+  </div>
+  {% endfor %}
+
+  <!-- Statistics -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3"><div class="stat-card"><div class="stat-icon"><i class="bi bi-graph-up"></i></div>
+      <div><div class="stat-number">{{ ('%g'|format(summary.avg) ~ '%') if summary.n else '-' }}</div><div class="stat-label">Average mock test score</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="stat-card"><div class="stat-icon"><i class="bi bi-journal-check"></i></div>
+      <div><div class="stat-number">{{ summary.n }}</div><div class="stat-label">Tests submitted</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="stat-card"><div class="stat-icon"><i class="bi bi-trophy"></i></div>
+      <div><div class="stat-number">{{ ('%g'|format(summary.best) ~ '%') if summary.n else '-' }}</div><div class="stat-label">Best score</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="stat-card"><div class="stat-icon"><i class="bi bi-bookmark-star"></i></div>
+      <div><div class="stat-number">{{ saved_total }}</div><div class="stat-label">Saved jobs</div></div></div></div>
+  </div>
+
+  <div class="row g-4">
+    <!-- ================= LEFT ================= -->
+    <div class="col-lg-8">
+      <div class="d-flex flex-wrap justify-content-between align-items-end mb-2">
+        <h2 class="h5 text-brand mb-0"><b>Jobs matching your profile</b></h2>
+        <a class="small" href="{{ url_for('eligibility', use_profile=1) }}">See full eligibility report</a>
+      </div>
+      <p class="small text-muted">Open jobs where your qualification, age and state meet the stored rules{% if current_user.preferred_category %} (your preferred category, {{ current_user.preferred_category }}, is shown first){% endif %}.
+        {{ match_total }} match{{ '' if match_total == 1 else 'es' }}{% if verify_count %}, and {{ verify_count }} more need{{ 's' if verify_count == 1 }} verification{% endif %}.
+        Always confirm on the official notification.</p>
+      <div class="row g-3 mb-4">
+        {% for job in matches %}<div class="col-md-6">{% include "_job_card.html" %}</div>
+        {% else %}
+        <div class="col-12"><div class="alert alert-info mb-0">No open jobs fully match your profile right now.
+          Try the <a href="{{ url_for('eligibility', use_profile=1) }}">eligibility checker</a> for details.</div></div>
+        {% endfor %}
+      </div>
+
+      <h2 class="h5 text-brand mb-2"><b>Upcoming application deadlines</b></h2>
+      {% if upcoming %}
+      <div class="card card-portal card-static mb-4">
+        <div class="table-responsive">
+          <table class="table table-portal align-middle mb-0">
+            <thead><tr><th>Job</th><th>Last date</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+            {% for job in upcoming %}
+            {% set d = deadline_info(job.application_deadline) %}
+            <tr>
+              <td><strong>{{ job.title }}</strong>{% if job.id in saved_ids %} <i class="bi bi-bookmark-fill text-warning" title="Saved"></i>{% endif %}<br>
+                <span class="small text-muted">{{ job.organization }}</span></td>
+              <td>{{ job.application_deadline|format_date }}</td>
+              <td><span class="badge text-bg-{{ d.css_class }}">{{ d.label }}</span></td>
+              <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ url_for('job_details', job_id=job.id) }}">View</a></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% else %}<div class="alert alert-info">No upcoming deadlines.</div>{% endif %}
+
+      <div class="d-flex flex-wrap justify-content-between align-items-end mb-2">
+        <h2 class="h5 text-brand mb-0"><b>Latest job notifications</b></h2>
+        <a class="small" href="{{ url_for('jobs') }}">View all jobs</a>
+      </div>
+      <div class="row g-3 mb-4">
+        {% for job in latest_jobs %}<div class="col-md-6">{% include "_job_card.html" %}</div>
+        {% else %}<div class="col-12"><div class="alert alert-info mb-0">No open notifications.</div></div>{% endfor %}
+      </div>
+
+      <div class="d-flex flex-wrap justify-content-between align-items-end mb-2">
+        <h2 class="h5 text-brand mb-0"><b>Saved jobs</b></h2>
+        {% if saved_total %}<a class="small" href="{{ url_for('saved_jobs') }}">View all {{ saved_total }}</a>{% endif %}
+      </div>
+      <div class="row g-3">
+        {% for job in saved_jobs %}<div class="col-md-6">{% include "_job_card.html" %}</div>
+        {% else %}<div class="col-12"><div class="alert alert-info mb-0">You have not saved any jobs yet. Use the bookmark button on a job.</div></div>{% endfor %}
+      </div>
+    </div>
+
+    <!-- ================= RIGHT ================= -->
+    <div class="col-lg-4">
+      <div class="card card-portal card-static mb-4">
+        <div class="card-body p-4">
+          <h2 class="h6 text-uppercase text-muted">Your profile</h2>
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="avatar-circle m-0" style="width:56px;height:56px;font-size:1.3rem">{{ current_user.full_name[0]|upper }}</div>
+            <div><strong>{{ current_user.full_name }}</strong><br><span class="small text-muted">{{ current_user.email }}</span></div>
+          </div>
+          <ul class="list-unstyled small mb-3">
+            <li class="mb-1"><i class="bi bi-calendar3 text-brand"></i> Age: {{ age if age is not none else '-' }} years</li>
+            <li class="mb-1"><i class="bi bi-mortarboard text-brand"></i> {{ current_user.highest_qualification }}</li>
+            <li class="mb-1"><i class="bi bi-geo-alt text-brand"></i> {{ current_user.district }}, {{ current_user.state }}</li>
+            <li><i class="bi bi-star text-brand"></i> Preferred: {{ current_user.preferred_category or 'No preference' }}</li>
+          </ul>
+          <a class="btn btn-sm btn-outline-primary w-100" href="{{ url_for('profile') }}">Edit profile</a>
+        </div>
+      </div>
+
+      <div class="card card-portal card-static mb-4">
+        <div class="card-body p-4">
+          <h2 class="h6 text-uppercase text-muted">Preparation progress</h2>
+          <p class="small mb-1">{{ tests_done }} of {{ tests_total }} mock tests attempted</p>
+          <div class="progress mb-3" role="progressbar" aria-label="Preparation progress" aria-valuenow="{{ progress_percent }}" aria-valuemin="0" aria-valuemax="100">
+            {% set pw = progress_percent ~ '%' %}
+<div class="progress-bar" {{ ('style="width: ' ~ pw ~ '"')|safe }}>{{ progress_percent }}%</div>
+          </div>
+          {% for p in test_progress %}
+          <div class="small mb-2">
+            <div class="d-flex justify-content-between"><span>{{ p.title }}</span><span class="fw-semibold">{{ '%g'|format(p.best) }}%</span></div>
+            <div class="progress" style="height:6px"><div class="progress-bar bg-success"  style="--progress-width: {{ p.best }}%; width: var(--progress-width);"></div></div>
+          </div>
+          {% endfor %}
+          {% if next_test %}
+          <div class="border rounded p-2 mt-3 bg-brand-light small">
+            <strong>Try next:</strong> {{ next_test.title }}<br>
+            <a href="{{ url_for('mock_tests', exam=next_test.exam_id) }}">Open this exam's tests</a>
+          </div>
+          {% elif tests_total %}
+          <p class="small text-success mt-3 mb-0"><i class="bi bi-check-circle"></i> You have attempted every available test.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card card-portal card-static mb-4">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h2 class="h6 text-uppercase text-muted mb-0">Recent mock tests</h2>
+            <a class="small" href="{{ url_for('attempt_history') }}">History</a>
+          </div>
+          {% for a in recent_attempts %}
+          <a class="d-flex justify-content-between align-items-center text-decoration-none border-bottom py-2" href="{{ url_for('results', attempt_id=a.id) }}">
+            <span class="small">{{ a.test_title }}<br><span class="text-muted">{{ a.submitted_at[:10]|format_date }}</span></span>
+            <span class="badge text-bg-primary">{{ '%g'|format(a.score_percent) }}%</span>
+          </a>
+          {% else %}
+          <p class="small text-muted mb-0">No tests taken yet. <a href="{{ url_for('mock_tests') }}">Start one now</a>.</p>
+          {% endfor %}
+          {% if chart %}
+          <hr>
+          <div style="height:200px"><canvas id="scoreChart" aria-label="Score trend chart" role="img"></canvas></div>
+          <script type="application/json" id="chart-data">{{ chart|tojson }}</script>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if chart %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endif %}
+{% endblock %}

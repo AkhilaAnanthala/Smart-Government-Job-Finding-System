@@ -1,0 +1,29 @@
+{# Needs: m (study material row with subject_name, exam_name, short_code) #}
+{% set icons = {'PDF': 'bi-file-earmark-pdf', 'Link': 'bi-link-45deg', 'Video': 'bi-play-btn', 'Notes': 'bi-journal-text'} %}
+<div class="card card-portal h-100">
+  <div class="card-body d-flex flex-column">
+    <div class="mb-2 d-flex flex-wrap gap-1">
+      <span class="badge text-bg-primary">{{ m.short_code }}</span>
+      <span class="badge text-bg-light border">{{ m.subject_name }}</span>
+      {% if m.is_official %}
+      <span class="badge text-bg-success"><i class="bi bi-patch-check"></i> Official</span>
+      {% else %}
+      <span class="badge text-bg-secondary">Additional resource</span>
+      {% endif %}
+    </div>
+    <h3 class="h6 job-title"><i class="bi {{ icons.get(m.resource_type, 'bi-file-earmark') }}"></i> {{ m.title }}</h3>
+    <p class="small text-muted mb-1">Type: {{ m.resource_type }}</p>
+    {% if m.description %}<p class="small mb-3">{{ m.description }}</p>{% endif %}
+    <div class="mt-auto d-flex flex-wrap gap-2">
+      {% if m.file_path %}
+      <a class="btn btn-sm btn-primary" href="{{ url_for('material_file', material_id=m.id) }}"
+         target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> Open</a>
+      <a class="btn btn-sm btn-outline-primary" href="{{ url_for('material_file', material_id=m.id, download=1) }}"
+         data-no-loading><i class="bi bi-download"></i> Download</a>
+      {% elif m.url %}
+      <a class="btn btn-sm btn-primary" href="{{ m.url }}" target="_blank" rel="noopener noreferrer"
+         title="Opens an external website"><i class="bi bi-box-arrow-up-right"></i> Open link</a>
+      {% endif %}
+    </div>
+  </div>
+</div>

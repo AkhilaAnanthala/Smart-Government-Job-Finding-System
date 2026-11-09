@@ -1,0 +1,18 @@
+{# Needs: r (official_resources row) #}
+<div class="card card-portal card-static resource-item h-100">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-start gap-2">
+      <h4 class="h6 mb-1">{{ r.title }}</h4>
+      <span class="badge text-bg-light border">{{ r.resource_kind }}</span>
+    </div>
+    {% if r.description %}<p class="small text-muted mb-2">{{ r.description }}</p>{% endif %}
+    {% if r.resource_kind == 'Mock Test' %}
+    <p class="small text-warning-emphasis mb-2"><i class="bi bi-info-circle"></i> This test is hosted on the official external website. This portal does not host it.</p>
+    {% endif %}
+    <div class="d-flex justify-content-between align-items-center">
+      <a class="btn btn-sm btn-outline-primary" href="{{ r.url }}" target="_blank" rel="noopener noreferrer">
+        Open official site <i class="bi bi-box-arrow-up-right"></i></a>
+      <span class="small text-muted">{% if r.last_verified %}Verified {{ r.last_verified|format_date }}{% else %}Not yet verified{% endif %}</span>
+    </div>
+  </div>
+</div>

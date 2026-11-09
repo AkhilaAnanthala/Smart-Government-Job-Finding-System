@@ -1,0 +1,58 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Admin - Users{% endblock %}
+
+{% block admin_content %}
+<h2 class="h5 text-brand mb-3">Registered users ({{ total }})</h2>
+<form method="get" action="{{ url_for('admin_users') }}" class="card card-portal card-static filter-card mb-3">
+  <div class="card-body"><div class="row g-3">
+    <div class="col-md-6"><label for="q" class="form-label small fw-semibold">Name or email</label>
+      <input type="text" class="form-control" id="q" name="q" value="{{ filters.q }}" maxlength="100"></div>
+    <div class="col-md-3"><label for="role" class="form-label small fw-semibold">Role</label>
+      <select class="form-select" id="role" name="role">
+        <option value="">All</option>
+        <option value="user" {{ 'selected' if filters.role == 'user' }}>User</option>
+        <option value="admin" {{ 'selected' if filters.role == 'admin' }}>Admin</option>
+      </select></div>
+    <div class="col-md-3 d-flex align-items-end gap-2">
+      <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Search</button>
+      <a class="btn btn-outline-secondary" href="{{ url_for('admin_users') }}">Clear</a></div>
+  </div></div>
+</form>
+
+<div class="card card-portal card-static"><div class="table-responsive">
+  <table class="table table-portal align-middle mb-0">
+    <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Qualification</th><th>Location</th><th>Joined</th><th>Tests</th><th>Saved</th><th></th></tr></thead>
+    <tbody>
+    {% for u in users %}
+    <tr>
+      <td>{{ u.full_name }}</td><td>{{ u.email }}</td>
+      <td><span class="badge {{ 'text-bg-danger' if u.role == 'admin' else 'text-bg-primary' }}">{{ u.role }}</span></td>
+      <td class="small">{{ u.highest_qualification }}</td>
+      <td class="small">{{ u.district }}, {{ u.state }}</td>
+      <td class="small">{{ u.created_at[:10]|format_date }}</td>
+      <td>{{ u.attempts }}</td><td>{{ u.saved }}</td>
+      <td class="text-end text-nowrap">
+        {% if u.id == current_user.id %}
+        <span class="badge text-bg-light border">You</span>
+        {% else %}
+        <form method="post" action="{{ url_for('admin_user_role', user_id=u.id) }}" class="d-inline"
+              data-confirm="{{ 'Remove administrator rights from ' ~ u.full_name ~ '?' if u.role == 'admin' else 'Make ' ~ u.full_name ~ ' an administrator? They will be able to change all portal data.' }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="role" value="{{ 'user' if u.role == 'admin' else 'admin' }}">
+          <button type="submit" class="btn btn-sm btn-outline-primary">{{ 'Make user' if u.role == 'admin' else 'Make admin' }}</button>
+        </form>
+        <form method="post" action="{{ url_for('admin_user_delete', user_id=u.id) }}" class="d-inline"
+              data-confirm="Delete {{ u.full_name }}? Their test attempts and saved jobs will be deleted too.">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% else %}<tr><td colspan="9" class="text-muted">No users found.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div></div>
+{% set pager_endpoint = 'admin_users' %}
+{% include "_pager.html" %}
+{% endblock %}

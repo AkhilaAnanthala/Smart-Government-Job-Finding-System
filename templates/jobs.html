@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Government Jobs{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div>
+      <h1><i class="bi bi-briefcase"></i> Government Jobs</h1>
+      <p class="text-muted small mb-0">Central Government and Andhra Pradesh Government recruitment (sample data)</p>
+    </div>
+    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('eligibility') }}">
+      <i class="bi bi-check2-square"></i> Check my eligibility</a>
+  </div>
+</div>
+
+<div class="container">
+  <!-- <div class="alert alert-warning small">
+    <i class="bi bi-exclamation-triangle"></i>
+    Records marked <strong>Demo data</strong> are samples made for a college project. Dates, vacancies and
+    pay scales are placeholders. Always confirm details on the official recruitment website.
+  </div> -->
+
+  <!-- ============ SEARCH AND FILTERS ============ -->
+  <form method="get" action="{{ url_for('jobs') }}" class="card card-portal card-static filter-card mb-4">
+    <div class="card-body">
+      {% if filters.exam %}<input type="hidden" name="exam" value="{{ filters.exam }}">{% endif %}
+      <div class="row g-3">
+        <div class="col-lg-4">
+          <label for="q" class="form-label small fw-semibold">Job title or organization</label>
+          <input type="text" class="form-control" id="q" name="q" value="{{ filters.q }}" maxlength="100"
+                 placeholder="e.g. Clerk, SSC, Railway">
+        </div>
+        <div class="col-6 col-lg-2">
+          <label for="govt" class="form-label small fw-semibold">Government</label>
+          <select class="form-select" id="govt" name="govt">
+            <option value="">All</option>
+            {% for g in GOVT_CATEGORIES %}<option value="{{ g }}" {{ 'selected' if filters.govt == g }}>{{ g }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-6 col-lg-2">
+          <label for="category" class="form-label small fw-semibold">Exam category</label>
+          <select class="form-select" id="category" name="category">
+            <option value="">All</option>
+            {% for c in EXAM_CATEGORIES %}<option value="{{ c }}" {{ 'selected' if filters.category == c }}>{{ c }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-lg-4">
+          <label for="qualification" class="form-label small fw-semibold">My qualification (shows jobs up to this level)</label>
+          <select class="form-select" id="qualification" name="qualification">
+            <option value="">Any qualification</option>
+            {% for level, label in QUALIFICATION_LEVELS.items() %}
+            <option value="{{ level }}" {{ 'selected' if filters.qualification == level|string }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-6 col-lg-3">
+          <label for="deadline" class="form-label small fw-semibold">Application deadline</label>
+          <select class="form-select" id="deadline" name="deadline">
+            {% for value, label in deadline_filters.items() %}
+            <option value="{{ value }}" {{ 'selected' if filters.deadline == value }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-6 col-lg-3">
+          <label for="sort" class="form-label small fw-semibold">Sort by</label>
+          <select class="form-select" id="sort" name="sort">
+            {% for value, label in sort_options.items() %}
+            <option value="{{ value }}" {{ 'selected' if filters.sort == value }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-lg-6 d-flex align-items-end gap-2">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Search</button>
+          <a class="btn btn-outline-secondary" href="{{ url_for('jobs') }}">Clear filters</a>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <!-- ============ RESULTS ============ -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <h2 class="h5 mb-0">{{ total }} job{{ '' if total == 1 else 's' }} found</h2>
+    {% if exam_filter %}
+    <span class="badge text-bg-primary fs-6 fw-normal">
+      Exam: {{ exam_filter.name }}
+      <a class="text-white ms-1" href="{{ url_for('jobs') }}" aria-label="Remove exam filter"><i class="bi bi-x-circle"></i></a>
+    </span>
+    {% endif %}
+  </div>
+
+  <div class="row g-3">
+    {% for job in jobs %}
+    <div class="col-md-6 col-lg-4">{% include "_job_card.html" %}</div>
+    {% else %}
+    <div class="col-12">
+      <div class="alert alert-info">No jobs match your filters. Try removing some filters or
+        <a href="{{ url_for('jobs') }}">clear all filters</a>.</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% include "_pagination.html" %}
+</div>
+{% endblock %}

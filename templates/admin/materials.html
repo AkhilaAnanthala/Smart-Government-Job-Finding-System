@@ -1,0 +1,57 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Admin - Study Materials{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h2 class="h5 text-brand mb-0">Study materials ({{ total }})</h2>
+  <a class="btn btn-primary btn-sm" href="{{ url_for('admin_material_new') }}"><i class="bi bi-plus-lg"></i> Add study material</a>
+</div>
+<form method="get" action="{{ url_for('admin_materials') }}" class="card card-portal card-static filter-card mb-3">
+  <div class="card-body"><div class="row g-3">
+    <div class="col-md-3"><label for="q" class="form-label small fw-semibold">Search</label>
+      <input type="text" class="form-control" id="q" name="q" value="{{ filters.q }}" maxlength="100"></div>
+    <div class="col-md-3"><label for="exam" class="form-label small fw-semibold">Exam</label>
+      <select class="form-select" id="exam" name="exam"><option value="">All</option>
+        {% for value, label in exam_choices %}<option value="{{ value }}" {{ 'selected' if filters.exam == value }}>{{ label }}</option>{% endfor %}</select></div>
+    <div class="col-md-3"><label for="subject" class="form-label small fw-semibold">Subject</label>
+      <select class="form-select" id="subject" name="subject"><option value="">All</option>
+        {% for value, label in subject_choices %}<option value="{{ value }}" {{ 'selected' if filters.subject == value }}>{{ label }}</option>{% endfor %}</select></div>
+    <div class="col-md-3"><label for="source" class="form-label small fw-semibold">Source</label>
+      <select class="form-select" id="source" name="source"><option value="">All</option>
+        <option value="official" {{ 'selected' if filters.source == 'official' }}>Official</option>
+        <option value="additional" {{ 'selected' if filters.source == 'additional' }}>Additional</option></select></div>
+    <div class="col-12 d-flex gap-2"><button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Search</button>
+      <a class="btn btn-outline-secondary" href="{{ url_for('admin_materials') }}">Clear</a></div>
+  </div></div>
+</form>
+
+<div class="card card-portal card-static"><div class="table-responsive">
+  <table class="table table-portal align-middle mb-0">
+    <thead><tr><th>Title</th><th>Exam / subject</th><th>Type</th><th>Source</th><th>Resource</th><th></th></tr></thead>
+    <tbody>
+    {% for m in materials %}
+    <tr>
+      <td><strong>{{ m.title }}</strong><br><span class="small text-muted">{{ (m.description or '')[:70] }}</span></td>
+      <td class="small"><span class="badge text-bg-primary">{{ m.short_code }}</span> {{ m.subject_name }}</td>
+      <td>{{ m.resource_type }}</td>
+      <td>{% if m.is_official %}<span class="badge text-bg-success">Official</span>{% else %}<span class="badge text-bg-secondary">Additional</span>{% endif %}</td>
+      <td class="small">
+        {% if m.file_path %}<a href="{{ url_for('material_file', material_id=m.id) }}" target="_blank" rel="noopener noreferrer"><i class="bi bi-file-earmark-pdf"></i> PDF</a>{% endif %}
+        {% if m.url %}<a href="{{ m.url }}" target="_blank" rel="noopener noreferrer"><i class="bi bi-link-45deg"></i> Link</a>{% endif %}
+      </td>
+      <td class="text-end text-nowrap">
+        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_material_edit', material_id=m.id) }}"><i class="bi bi-pencil"></i> Edit</a>
+        <form method="post" action="{{ url_for('admin_material_delete', material_id=m.id) }}" class="d-inline"
+              data-confirm="Delete '{{ m.title }}'{{ ' and its uploaded PDF' if m.file_path }}?">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+        </form>
+      </td>
+    </tr>
+    {% else %}<tr><td colspan="6" class="text-muted">No study materials found.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div></div>
+{% set pager_endpoint = 'admin_materials' %}
+{% include "_pager.html" %}
+{% endblock %}

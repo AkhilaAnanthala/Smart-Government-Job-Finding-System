@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Syllabus - {{ exam.short_code }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb small mb-2">
+        <li class="breadcrumb-item"><a href="{{ url_for('exams') }}">Examinations</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('exam_details', exam_id=exam.id) }}">{{ exam.short_code }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Syllabus</li>
+      </ol>
+    </nav>
+    <h1><i class="bi bi-list-check"></i> Syllabus: {{ exam.name }}</h1>
+  </div>
+</div>
+
+<div class="container">
+  <div class="alert alert-warning small">
+    <i class="bi bi-exclamation-triangle"></i>
+    This is a summary for study guidance. Syllabus and exam patterns change, so always confirm the current version in the official notification.
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card card-portal card-static mb-4">
+        <div class="card-body p-4">
+          <h2 class="h5 text-brand mb-3">Exam pattern</h2>
+          <p class="pre-wrap mb-0">{{ exam.exam_pattern or 'Not available. See the official notification.' }}</p>
+        </div>
+      </div>
+      <div class="card card-portal card-static mb-4">
+        <div class="card-body p-4">
+          <h2 class="h5 text-brand mb-3">Syllabus summary</h2>
+          <p class="pre-wrap mb-0">{{ exam.syllabus_summary or 'Not available. See the official notification.' }}</p>
+        </div>
+      </div>
+
+      <h2 class="h5 text-brand mb-3">Subjects</h2>
+      {% for s in subjects %}
+      <div class="card card-portal card-static mb-2">
+        <div class="card-body py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div><strong>{{ s.name }}</strong><br><span class="small text-muted">{{ s.description }}</span></div>
+          <div class="d-flex gap-2">
+            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('materials', subject=s.id) }}">Materials ({{ s.material_count }})</a>
+            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('practice_questions', subject=s.id) }}">Questions ({{ s.question_count }})</a>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="alert alert-info">No subjects have been added for this exam yet.</div>
+      {% endfor %}
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card card-portal card-static">
+        <div class="card-body p-4">
+          <h2 class="h6 text-uppercase text-muted">Official syllabus links</h2>
+          {% for r in syllabus_links %}<div class="mb-3">{% include "_official_resource.html" %}</div>
+          {% else %}
+          {% if exam.official_url %}
+          <a class="btn btn-sm btn-success w-100" href="{{ exam.official_url }}" target="_blank" rel="noopener noreferrer">
+            <i class="bi bi-box-arrow-up-right"></i> Official website</a>
+          {% else %}
+          <p class="small text-muted mb-0">No official syllabus link has been configured for this exam yet.</p>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

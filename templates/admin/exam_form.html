@@ -1,0 +1,26 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{{ 'Edit exam' if exam_id else 'Add exam' }}{% endblock %}
+
+{% block admin_content %}
+{% from "admin/_macros.html" import text_input, text_area, select_input %}
+<h2 class="h5 text-brand mb-3">{{ 'Edit exam' if exam_id else 'Add a new exam' }}</h2>
+{% if errors.get('_form') %}<div class="alert alert-danger">{{ errors['_form'] }}</div>{% endif %}
+<form method="post" action="{{ url_for('admin_exam_edit', exam_id=exam_id) if exam_id else url_for('admin_exam_new') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="card card-portal card-static mb-3"><div class="card-body p-4"><div class="row g-3">
+    {{ text_input(form, errors, 'name', 'Exam name', required=True, maxlength=150, col='col-md-8') }}
+    {{ text_input(form, errors, 'short_code', 'Short code', required=True, maxlength=30, col='col-md-4', placeholder='e.g. SSC-CGL', help='Letters, numbers and hyphens. Saved in capitals.') }}
+    {{ select_input(form, errors, 'category', 'Category', EXAM_CATEGORIES, required=True, col='col-md-4') }}
+    {{ select_input(form, errors, 'govt_level', 'Government level', GOVT_CATEGORIES, required=True, col='col-md-4') }}
+    {{ text_input(form, errors, 'conducting_body', 'Conducting body', required=True, col='col-md-4') }}
+    {{ text_input(form, errors, 'official_url', 'Official website / syllabus link', type='url', maxlength=500, col='col-12', placeholder='https://...', help='Leave empty if you have not verified an official link. Pages then say that no link is configured.') }}
+    {{ text_area(form, errors, 'description', 'Description', rows=2, maxlength=1000) }}
+    {{ text_area(form, errors, 'exam_pattern', 'Exam pattern', rows=4, maxlength=3000) }}
+    {{ text_area(form, errors, 'syllabus_summary', 'Syllabus summary', rows=4, maxlength=3000) }}
+  </div></div></div>
+  <div class="d-flex gap-2">
+    <button type="submit" class="btn btn-primary">Save exam</button>
+    <a class="btn btn-outline-secondary" href="{{ url_for('admin_exams') }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Attempt History{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container"><h1><i class="bi bi-clock-history"></i> Mock Test History</h1></div>
+</div>
+
+<div class="container">
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-4"><div class="stat-card"><div class="stat-icon"><i class="bi bi-journal-check"></i></div>
+      <div><div class="stat-number">{{ summary.n }}</div><div class="stat-label">Tests submitted</div></div></div></div>
+    <div class="col-6 col-md-4"><div class="stat-card"><div class="stat-icon"><i class="bi bi-graph-up"></i></div>
+      <div><div class="stat-number">{{ ('%g'|format(summary.avg) ~ '%') if summary.n else '-' }}</div><div class="stat-label">Average score</div></div></div></div>
+    <div class="col-12 col-md-4"><div class="stat-card"><div class="stat-icon"><i class="bi bi-trophy"></i></div>
+      <div><div class="stat-number">{{ ('%g'|format(summary.best) ~ '%') if summary.n else '-' }}</div><div class="stat-label">Best score</div></div></div></div>
+  </div>
+
+  <form method="get" action="{{ url_for('attempt_history') }}" class="card card-portal card-static filter-card mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-8">
+          <label for="exam" class="form-label small fw-semibold">Examination</label>
+          <select class="form-select" id="exam" name="exam">
+            <option value="">All exams</option>
+            {% for e in exams_list %}<option value="{{ e.id }}" {{ 'selected' if exam_id == e.id }}>{{ e.short_code }} - {{ e.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4 d-flex align-items-end gap-2">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filter</button>
+          <a class="btn btn-outline-secondary" href="{{ url_for('attempt_history') }}">Clear</a>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <h2 class="h5 mb-3">{{ total }} attempt{{ '' if total == 1 else 's' }}</h2>
+  {% if attempts %}
+  <div class="card card-portal card-static">
+    <div class="table-responsive">
+      <table class="table table-portal align-middle mb-0">
+        <thead><tr><th>Date</th><th>Test</th><th>Score</th><th>Correct</th><th>Time taken</th><th></th></tr></thead>
+        <tbody>
+        {% for a in attempts %}
+        <tr>
+          <td>{{ a.started_at[:10]|format_date }}</td>
+          <td><strong>{{ a.test_title }}</strong><br><span class="small text-muted">{{ a.subject_name }}</span></td>
+          {% if a.status == 'submitted' %}
+          <td><span class="badge text-bg-primary fs-6">{{ '%g'|format(a.score_percent) }}%</span></td>
+          <td>{{ a.correct_count }} / {{ a.total_questions }}</td>
+          <td>{{ a.time_taken_seconds|duration }}</td>
+          <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ url_for('results', attempt_id=a.id) }}">View result</a></td>
+          {% else %}
+          <td><span class="badge text-bg-warning">In progress</span></td>
+          <td>-</td><td>-</td>
+          <td class="text-end"><a class="btn btn-sm btn-warning" href="{{ url_for('take_test', attempt_id=a.id) }}">Resume</a></td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="alert alert-info">No attempts yet. <a href="{{ url_for('mock_tests') }}">Take your first mock test</a>.</div>
+  {% endif %}
+
+  {% set pager_endpoint = 'attempt_history' %}
+  {% include "_pager.html" %}
+</div>
+{% endblock %}

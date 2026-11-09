@@ -1,0 +1,71 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{{ 'Edit job' if job_id else 'Add job' }}{% endblock %}
+
+{% block admin_content %}
+{% from "admin/_macros.html" import text_input, text_area, select_input, checkbox %}
+<h2 class="h5 text-brand mb-3">{{ 'Edit job' if job_id else 'Add a new job' }}</h2>
+{% if errors.get('_form') %}<div class="alert alert-danger">{{ errors['_form'] }}</div>{% endif %}
+
+<form method="post" action="{{ url_for('admin_job_edit', job_id=job_id) if job_id else url_for('admin_job_new') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div class="card card-portal card-static mb-3"><div class="card-body p-4">
+    <h3 class="h6 text-uppercase text-muted mb-3">Basic information</h3>
+    <div class="row g-3">
+      {{ text_input(form, errors, 'title', 'Job title', required=True, col='col-md-8') }}
+      {{ text_input(form, errors, 'organization', 'Recruiting organization', required=True, col='col-md-4') }}
+      {{ select_input(form, errors, 'govt_category', 'Government', GOVT_CATEGORIES, required=True, col='col-md-4') }}
+      {{ select_input(form, errors, 'exam_category', 'Exam category', EXAM_CATEGORIES, required=True, col='col-md-4') }}
+      {{ text_input(form, errors, 'salary', 'Salary / pay scale', col='col-md-4') }}
+    </div>
+  </div></div>
+
+  <div class="card card-portal card-static mb-3"><div class="card-body p-4">
+    <h3 class="h6 text-uppercase text-muted mb-3">Eligibility rules (used by the eligibility checker)</h3>
+    <div class="row g-3">
+      {{ select_input(form, errors, 'min_qualification_level', 'Minimum qualification level', QUALIFICATION_LEVELS.items()|list, required=True, col='col-md-4', help='Used for the comparison.') }}
+      {{ text_input(form, errors, 'required_qualification', 'Qualification text shown to users', required=True, col='col-md-8', help='Include any subject or training requirement, for example "with D.El.Ed".') }}
+      {{ text_input(form, errors, 'min_age', 'Minimum age', type='number', col='col-md-3', lo=14, hi=70) }}
+      {{ text_input(form, errors, 'max_age', 'Maximum age (general)', type='number', col='col-md-3', lo=14, hi=70) }}
+      {{ select_input(form, errors, 'state_requirement', 'State requirement', INDIAN_STATES, col='col-md-6', blank='None - open to all states') }}
+      {{ text_input(form, errors, 'vacancies', 'Vacancies', type='number', col='col-md-4', lo=0, hi=10000000) }}
+      {{ text_input(form, errors, 'vacancies_note', 'Vacancies note', col='col-md-8', help='For demo records a default note is added automatically.') }}
+      {{ text_area(form, errors, 'eligibility_text', 'Eligibility details', rows=3) }}
+    </div>
+  </div></div>
+
+  <div class="card card-portal card-static mb-3"><div class="card-body p-4">
+    <h3 class="h6 text-uppercase text-muted mb-3">Dates, description and links</h3>
+    <div class="row g-3">
+      {{ text_input(form, errors, 'application_start', 'Application start date', type='date', col='col-md-6') }}
+      {{ text_input(form, errors, 'application_deadline', 'Application deadline', type='date', col='col-md-6') }}
+      {{ text_area(form, errors, 'description', 'Job description', rows=3) }}
+      {{ text_area(form, errors, 'syllabus_pattern', 'Syllabus / examination pattern', rows=3) }}
+      {{ text_input(form, errors, 'notification_url', 'Official notification link', type='url', col='col-md-6', maxlength=500, placeholder='https://...', help='Use only real official links.') }}
+      {{ text_input(form, errors, 'apply_url', 'Official application link', type='url', col='col-md-6', maxlength=500, placeholder='https://...') }}
+    </div>
+  </div></div>
+
+  <div class="card card-portal card-static mb-3"><div class="card-body p-4">
+    <h3 class="h6 text-uppercase text-muted mb-3">Recruitment exam(s) and flags</h3>
+    <p class="small text-muted">A job can use several exams, and an exam can be shared by many jobs. Study material follows the exam.</p>
+    <div class="row g-2 mb-3">
+      {% for e in exams_all %}
+      <div class="col-md-6"><div class="form-check">
+        <input class="form-check-input" type="checkbox" name="exam_ids" id="exam_{{ e.id }}" value="{{ e.id }}" {{ 'checked' if e.id in selected_exam_ids }}>
+        <label class="form-check-label" for="exam_{{ e.id }}">{{ e.short_code }} - {{ e.name }}</label>
+      </div></div>
+      {% else %}<div class="col-12 text-muted small">No exams exist yet. Add one on the Exams page first.</div>{% endfor %}
+    </div>
+    <div class="row g-3">
+      {{ checkbox(form, 'is_demo', 'This is demonstration / sample data', 'Leave ticked unless every detail was verified against the official notification.') }}
+      {{ checkbox(form, 'age_relaxation_verified', 'Official age-relaxation rules verified', 'Stored for future use. The eligibility checker never applies age relaxation.') }}
+    </div>
+  </div></div>
+
+  <div class="d-flex gap-2">
+    <button type="submit" class="btn btn-primary">Save job</button>
+    <a class="btn btn-outline-secondary" href="{{ url_for('admin_jobs') }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}
